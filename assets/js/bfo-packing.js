@@ -32,10 +32,11 @@
 	// State
 	// -------------------------------------------------------------------------
 	const state = {
-		items:       {}, // keyed by product_id, value: {needed, scanned, status}
-		activeBoxId: cfg.firstBoxId || null,
-		heartbeatId: null,
-		alertTimer:  null,
+		items:           {}, // keyed by product_id, value: {needed, scanned, status}
+		activeBoxId:     cfg.firstBoxId || null,
+		activeBoxNumber: 1,
+		heartbeatId:     null,
+		alertTimer:      null,
 	};
 
 	// -------------------------------------------------------------------------
@@ -78,6 +79,13 @@
 				status:  item.status,
 			};
 		} );
+
+		// Read the initial active box number from the first active box tab in the DOM.
+		const activeTab = document.querySelector( '.bfo-box-tab--active' );
+		if ( activeTab && activeTab.dataset.boxNumber ) {
+			state.activeBoxNumber = parseInt( activeTab.dataset.boxNumber, 10 ) || 1;
+		}
+
 		refreshAllRows();
 		refreshProgress();
 	}
@@ -119,7 +127,7 @@
 			session_id: cfg.sessionId,
 			order_id:   cfg.orderId,
 			barcode:    barcode,
-			box_id:     state.activeBoxId || '',
+			box_number: state.activeBoxNumber || 1,
 		} );
 
 		fetch( cfg.ajaxUrl, { method: 'POST', body } )
@@ -426,9 +434,8 @@
 			list.innerHTML = '';
 			unaccounted.forEach( function ( item ) {
 				const li = document.createElement( 'li' );
-				li.textContent = item.name + ' — ' +
-					( i18n.needed || 'needed' ) + ': ' + item.needed + ', ' +
-					( i18n.scanned || 'scanned' ) + ': ' + item.scanned;
+				li.textContent = item.name + ' — ' + item.remaining + ' × ' +
+					( i18n.remaining || 'remaining' );
 				list.appendChild( li );
 			} );
 		}
@@ -470,8 +477,9 @@
 				.then( r => r.json() )
 				.then( function ( res ) {
 					if ( res.success && res.data?.box_id ) {
-						appendBoxTab( res.data.box_id, res.data.label );
-						state.activeBoxId = res.data.box_id;
+						appendBoxTab( res.data.box_id, res.data.label, res.data.box_number );
+						state.activeBoxId     = res.data.box_id;
+						state.activeBoxNumber = res.data.box_number || 1;
 					} else {
 						showAlert( res.data?.message || i18n.actionFailed, 'error' );
 					}
@@ -485,12 +493,13 @@
 			if ( tab ) {
 				document.querySelectorAll( '.bfo-box-tab' ).forEach( t => t.classList.remove( 'bfo-box-tab--active' ) );
 				tab.classList.add( 'bfo-box-tab--active' );
-				state.activeBoxId = tab.dataset.boxId;
+				state.activeBoxId     = tab.dataset.boxId;
+				state.activeBoxNumber = parseInt( tab.dataset.boxNumber, 10 ) || 1;
 			}
 		} );
 	}
 
-	function appendBoxTab( boxId, label ) {
+	function appendBoxTab( boxId, label, boxNumber ) {
 		const tabContainer = document.getElementById( 'bfo-box-tabs' );
 		if ( ! tabContainer ) return;
 
@@ -498,10 +507,11 @@
 		tabContainer.querySelectorAll( '.bfo-box-tab' ).forEach( t => t.classList.remove( 'bfo-box-tab--active' ) );
 
 		const tab = document.createElement( 'button' );
-		tab.type        = 'button';
-		tab.className   = 'button bfo-box-tab bfo-box-tab--active';
-		tab.dataset.boxId = boxId;
-		tab.textContent  = label;
+		tab.type              = 'button';
+		tab.className         = 'button bfo-box-tab bfo-box-tab--active';
+		tab.dataset.boxId     = boxId;
+		tab.dataset.boxNumber = boxNumber || 1;
+		tab.textContent       = label;
 		tabContainer.appendChild( tab );
 	}
 

@@ -166,6 +166,19 @@ class BFO_Missing_Products {
 			$order->update_status( 'on-hold', __( 'Missing item requires manager approval before shipping.', 'barcode-fulfillment-orders' ) );
 		}
 
+		// Trigger admin notification email if enabled.
+		BFO_Emails::send_missing_items_email(
+			$order->get_id(),
+			$order,
+			array(
+				array(
+					'name'   => $name,
+					'qty'    => max( 1, absint( $quantity ) ),
+					'reason' => $reason_text,
+				),
+			)
+		);
+
 		$scanner = BFO_Scanner::get_instance();
 		$summary = $scanner->build_summary( absint( $session_id ), $order );
 

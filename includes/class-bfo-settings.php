@@ -651,9 +651,8 @@ class BFO_Settings {
 		// From address.
 		$addr_keys = array( 'name', 'company', 'street1', 'street2', 'city', 'state', 'zip', 'country', 'phone', 'email' );
 		foreach ( $addr_keys as $key ) {
-			$opt  = 'bfo_shipping_from_' . $key;
-			$post = 'bfo_shipping_from_' . $key;
-			update_option( constant( 'BFO_OPTION_SHIPPING_FROM_' . strtoupper( $key ) ), isset( $_POST[ $post ] ) ? sanitize_text_field( wp_unslash( $_POST[ $post ] ) ) : '' );
+			$post_key = 'bfo_shipping_from_' . $key;
+			update_option( constant( 'BFO_OPTION_SHIPPING_FROM_' . strtoupper( $key ) ), isset( $_POST[ $post_key ] ) ? sanitize_text_field( wp_unslash( $_POST[ $post_key ] ) ) : '' );
 		}
 
 		// Default parcel.
@@ -709,8 +708,8 @@ class BFO_Settings {
 		global $wpdb;
 		$table = $wpdb->prefix . 'bfo_packing_sessions';
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$rows = $wpdb->get_results( "SELECT * FROM `{$table}` ORDER BY id DESC", ARRAY_A );
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results( "SELECT * FROM `{$table}` ORDER BY id DESC LIMIT 10000", ARRAY_A );
 
 		$filename = 'bfo-sessions-' . gmdate( 'Ymd-His' ) . '.csv';
 

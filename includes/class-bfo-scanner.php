@@ -254,6 +254,10 @@ class BFO_Scanner {
 	/**
 	 * Handles wp_ajax_bfo_complete_order.
 	 *
+	 * Returns success=true with an 'unaccounted' key when items are still pending,
+	 * so the JS warning modal can display them without treating it as a server error.
+	 * Returns success=false only for hard errors (bad session, permission, etc.).
+	 *
 	 * @since  1.0.0
 	 * @return void
 	 */
@@ -266,17 +270,41 @@ class BFO_Scanner {
 			wp_send_json_error( array( 'type' => 'error', 'message' => __( 'Permission denied.', 'barcode-fulfillment-orders' ) ), 403 );
 		}
 
+		$session = BFO_Database::get_instance()->get_session( $session_id );
+		if ( ! $session || BFO_SESSION_ACTIVE !== $session->status ) {
+			wp_send_json_error( array( 'type' => 'error', 'message' => __( 'No active packing session.', 'barcode-fulfillment-orders' ) ) );
+		}
+
+		$order = wc_get_order( (int) $session->order_id );
+		if ( ! $order ) {
+			wp_send_json_error( array( 'type' => 'error', 'message' => __( 'Order not found.', 'barcode-fulfillment-orders' ) ) );
+		}
+
+		// Pre-check unaccounted items and return them as a success payload so the
+		// client-side modal can display the list and let the worker decide.
+		$unaccounted = BFO_Packing_Session::get_instance()->get_unaccounted_items( $session_id, $order );
+		if ( ! empty( $unaccounted ) ) {
+			wp_send_json_success(
+				array(
+					'type'        => 'unaccounted',
+					'unaccounted' => $unaccounted,
+				)
+			);
+		}
+
+		// All items accounted — mark session as complete and transition order status.
 		$result = BFO_Packing_Session::get_instance()->complete( $session_id, get_current_user_id() );
 
 		if ( $result['success'] ) {
-			wp_send_json_success( array( 'message' => __( 'Order packed and ready to ship!', 'barcode-fulfillment-orders' ) ) );
-		} else {
-			wp_send_json_error(
+			wp_send_json_success(
 				array(
-					'message'     => $result['message'],
-					'unaccounted' => $result['unaccounted'],
+					'type'     => 'complete',
+					'message'  => __( 'Order packed and ready to ship!', 'barcode-fulfillment-orders' ),
+					'redirect' => esc_url( admin_url( 'admin.php?page=bfo-queue' ) ),
 				)
 			);
+		} else {
+			wp_send_json_error( array( 'type' => 'error', 'message' => $result['message'] ) );
 		}
 	}
 

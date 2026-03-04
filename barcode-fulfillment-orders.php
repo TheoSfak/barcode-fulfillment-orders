@@ -268,23 +268,15 @@ define( 'BFO_MAX_LOG_PER_PAGE', 50 );
 // -------------------------------------------------------------------------
 
 /**
- * Checks whether WooCommerce is currently active on single-site or multisite.
+ * Checks whether WooCommerce is currently active.
+ *
+ * Uses class_exists() which is reliable after plugins_loaded fires at any priority.
  *
  * @since  1.0.0
  * @return bool
  */
 function bfo_is_woocommerce_active() {
-	$active_plugins = (array) get_option( 'active_plugins', array() );
-
-	if ( is_multisite() ) {
-		$active_plugins = array_merge(
-			$active_plugins,
-			array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) )
-		);
-	}
-
-	return in_array( 'woocommerce/woocommerce.php', $active_plugins, true ) ||
-		   array_key_exists( 'woocommerce/woocommerce.php', $active_plugins );
+	return class_exists( 'WooCommerce' );
 }
 
 // -------------------------------------------------------------------------
@@ -456,15 +448,17 @@ function bfo_activate() {
 		BFO_OPTION_QUEUE_REFRESH          => 30,
 		BFO_OPTION_EMAIL_PACKED           => 'yes',
 		BFO_OPTION_EMAIL_MISSING          => 'yes',
-		BFO_OPTION_LOG_RETENTION          => 90,			// Shipping defaults.
-			BFO_OPTION_SHIPPING_PROVIDER      => 'none',
-			BFO_OPTION_AUTO_SHIP_ON_PACK      => 'no',
-			BFO_OPTION_DEFAULT_LENGTH         => 10,
-			BFO_OPTION_DEFAULT_WIDTH          =>  8,
-			BFO_OPTION_DEFAULT_HEIGHT         =>  4,
-			BFO_OPTION_DEFAULT_WEIGHT         => 16,
-			BFO_OPTION_DEFAULT_DIST_UNIT      => 'in',
-			BFO_OPTION_DEFAULT_MASS_UNIT      => 'oz',	);
+		BFO_OPTION_LOG_RETENTION          => 90,
+		// Shipping defaults.
+		BFO_OPTION_SHIPPING_PROVIDER      => 'none',
+		BFO_OPTION_AUTO_SHIP_ON_PACK      => 'no',
+		BFO_OPTION_DEFAULT_LENGTH         => 10,
+		BFO_OPTION_DEFAULT_WIDTH          =>  8,
+		BFO_OPTION_DEFAULT_HEIGHT         =>  4,
+		BFO_OPTION_DEFAULT_WEIGHT         => 16,
+		BFO_OPTION_DEFAULT_DIST_UNIT      => 'in',
+		BFO_OPTION_DEFAULT_MASS_UNIT      => 'oz',
+	);
 
 	foreach ( $defaults as $key => $value ) {
 		if ( false === get_option( $key ) ) {
@@ -475,13 +469,13 @@ function bfo_activate() {
 register_activation_hook( __FILE__, 'bfo_activate' );
 
 /**
- * Plugin deactivation: clean up transients.
+ * Plugin deactivation: flush any scheduled events registered by this plugin.
  *
  * @since 1.0.0
  * @return void
  */
 function bfo_deactivate() {
-	delete_transient( 'bfo_order_queue_cache' );
+	wp_clear_scheduled_hook( 'bfo_check_idle_sessions' );
 }
 register_deactivation_hook( __FILE__, 'bfo_deactivate' );
 

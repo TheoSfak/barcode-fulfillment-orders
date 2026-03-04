@@ -418,6 +418,7 @@ class BFO_Fulfillment_Screen {
 				markedMissing      : <?php echo wp_json_encode( __( 'Item marked as missing.', 'barcode-fulfillment-orders' ) ); ?>,
 				needed             : <?php echo wp_json_encode( __( 'needed', 'barcode-fulfillment-orders' ) ); ?>,
 				scanned            : <?php echo wp_json_encode( __( 'scanned', 'barcode-fulfillment-orders' ) ); ?>,
+				remaining          : <?php echo wp_json_encode( __( 'remaining', 'barcode-fulfillment-orders' ) ); ?>,
 			},
 		};
 		</script>

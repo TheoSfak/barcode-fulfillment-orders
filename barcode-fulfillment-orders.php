@@ -3,7 +3,7 @@
  * Plugin Name:       Barcode Fulfillment Orders
  * Plugin URI:        https://github.com/TheoSfak/barcode-fulfillment-orders
  * Description:       Barcode-based warehouse fulfillment for WooCommerce. Assign barcodes to products, scan orders to pack, and track every step from queue to shipment.
- * Version:           1.1.0
+ * Version:           1.2.5
  * Requires at least: 6.4
  * Requires PHP:      8.0
  * Author:            Theodore Sfakianakis
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // -------------------------------------------------------------------------
 
 /** Plugin version. */
-define( 'BFO_VERSION', '1.1.0' );
+define( 'BFO_VERSION', '1.2.5' );
 
 /** Database schema version (increment when tables change). */
 define( 'BFO_DB_VERSION', '1.0.0' );

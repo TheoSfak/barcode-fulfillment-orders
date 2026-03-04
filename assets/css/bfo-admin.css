@@ -1,0 +1,213 @@
+/* =============================================================================
+   BFO Admin Styles — bfo-admin.css
+   Shared admin styles: queue page, settings, dashboard, audit trail.
+   ============================================================================= */
+
+/* ---------------------------------------------------------------------------
+   Order Queue Page
+   --------------------------------------------------------------------------- */
+.bfo-queue-wrap .wp-list-table th,
+.bfo-queue-wrap .wp-list-table td {
+	vertical-align: middle;
+}
+
+.bfo-queue-barcode-thumb {
+	max-height: 40px;
+	width: auto;
+	display: block;
+}
+
+.bfo-queue-actions .button {
+	white-space: nowrap;
+}
+
+.bfo-lock-info {
+	color: #666;
+	font-style: italic;
+	font-size: 0.85rem;
+}
+
+/* Status dot badges in queue */
+.bfo-status-dot {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	margin-right: 5px;
+	vertical-align: middle;
+}
+
+.bfo-status-dot--packing { background: #f6821f; }
+.bfo-status-dot--processing { background: #3582c4; }
+
+/* ---------------------------------------------------------------------------
+   Dashboard
+   --------------------------------------------------------------------------- */
+.bfo-dashboard-wrap h1 { margin-bottom: 16px; }
+
+/* Stat cards row */
+.bfo-stat-cards {
+	display: flex;
+	gap: 16px;
+	flex-wrap: wrap;
+	margin-bottom: 24px;
+}
+
+.bfo-stat-card {
+	flex: 1;
+	min-width: 140px;
+	background: #fff;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 20px 16px;
+	text-align: center;
+	box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.bfo-stat-card--alert { border-color: #f6821f; }
+
+.bfo-stat-value {
+	display: block;
+	font-size: 2.4rem;
+	font-weight: 700;
+	color: #1e1e1e;
+	line-height: 1.1;
+}
+
+.bfo-stat-label {
+	display: block;
+	font-size: 0.8rem;
+	color: #666;
+	margin-top: 6px;
+}
+
+/* Alerts panel */
+.bfo-alerts-panel {
+	margin-bottom: 24px;
+}
+
+.bfo-alerts-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.bfo-alert {
+	padding: 10px 14px;
+	border-radius: 4px;
+	margin-bottom: 8px;
+	font-size: 0.9rem;
+}
+
+.bfo-alert--warning { background: #fef9c3; border-left: 4px solid #eab308; color: #713f12; }
+.bfo-alert--error   { background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; }
+.bfo-alert--info    { background: #dbeafe; border-left: 4px solid #3b82f6; color: #1e40af; }
+
+/* Dashboard two-column layout */
+.bfo-dashboard-columns {
+	display: flex;
+	gap: 24px;
+	flex-wrap: wrap;
+}
+
+.bfo-chart-wrap     { flex: 2; min-width: 280px; }
+.bfo-leaderboard-wrap { flex: 1; min-width: 200px; }
+
+/* CSS-only bar chart */
+.bfo-bar-chart {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	height: 160px;
+	padding: 0 4px;
+	border-bottom: 2px solid #ddd;
+}
+
+.bfo-bar-chart__item {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	height: 100%;
+	justify-content: flex-end;
+}
+
+.bfo-bar-chart__bar {
+	width: 100%;
+	background: linear-gradient(180deg, #3582c4, #1d6fa5);
+	border-radius: 4px 4px 0 0;
+	position: relative;
+	min-height: 4px;
+	transition: height 0.4s ease;
+}
+
+.bfo-bar-chart__value {
+	position: absolute;
+	top: -18px;
+	left: 50%;
+	transform: translateX(-50%);
+	font-size: 0.75rem;
+	font-weight: 700;
+	color: #333;
+	white-space: nowrap;
+}
+
+.bfo-bar-chart__label {
+	font-size: 0.75rem;
+	color: #666;
+	margin-top: 4px;
+}
+
+/* Leaderboard */
+.bfo-leaderboard-table td { font-size: 0.85rem; }
+
+/* ---------------------------------------------------------------------------
+   Audit Trail
+   --------------------------------------------------------------------------- */
+.bfo-audit-filters {
+	margin: 12px 0 16px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.bfo-audit-table .column-session { width: 80px; }
+.bfo-audit-table .column-duration { width: 90px; }
+.bfo-audit-table .column-scans  { width: 60px; }
+
+.bfo-scan-action {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+.bfo-scan-action--success  { background: #bbf7d0; color: #065f46; }
+.bfo-scan-action--missing  { background: #fed7aa; color: #92400e; }
+.bfo-scan-action--over_scan { background: #fecaca; color: #991b1b; }
+.bfo-scan-action--wrong_product { background: #e5e7eb; color: #374151; }
+
+/* Audit detail meta table */
+.bfo-audit-detail-meta { max-width: 600px; margin-bottom: 20px; }
+
+/* ---------------------------------------------------------------------------
+   Settings Page
+   --------------------------------------------------------------------------- */
+.bfo-settings-wrap .nav-tab-wrapper { margin-bottom: 20px; }
+
+/* ---------------------------------------------------------------------------
+   Barcode column in product/order lists
+   --------------------------------------------------------------------------- */
+.column-bfo_barcode { width: 160px; }
+.column-bfo_barcode img { max-height: 36px; width: auto; }
+
+/* ---------------------------------------------------------------------------
+   Responsive
+   --------------------------------------------------------------------------- */
+@media (max-width: 782px) {
+	.bfo-stat-cards { flex-direction: column; }
+	.bfo-dashboard-columns { flex-direction: column; }
+	.bfo-bar-chart { height: 100px; }
+}

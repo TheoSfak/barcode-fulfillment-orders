@@ -1,0 +1,22 @@
+# Composer dependencies
+vendor/
+
+# Node modules
+node_modules/
+
+# Build artifacts
+*.zip
+*.tar.gz
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# WordPress generated
+*.log
+debug.log

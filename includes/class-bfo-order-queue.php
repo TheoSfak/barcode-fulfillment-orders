@@ -1,0 +1,360 @@
+<?php
+/**
+ * Order fulfillment queue — admin page listing orders ready to pack.
+ *
+ * Registers the top-level "Fulfillment" admin menu and the "Order Queue"
+ * submenu page. Displays orders with status "processing" or BFO_STATUS_PACKING
+ * in a sortable table, with a one-click "Start Packing" button.
+ *
+ * @package BarcodeFulfillmentOrders
+ * @since   1.0.0
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Class BFO_Order_Queue
+ *
+ * @since 1.0.0
+ */
+class BFO_Order_Queue {
+
+	/**
+	 * Singleton instance.
+	 *
+	 * @since 1.0.0
+	 * @var BFO_Order_Queue|null
+	 */
+	private static $instance = null;
+
+	/**
+	 * Returns the singleton instance.
+	 *
+	 * @since  1.0.0
+	 * @return BFO_Order_Queue
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
+	 * Alias for get_instance() — called by the main plugin bootstrapper.
+	 *
+	 * @since  1.0.0
+	 * @return static
+	 */
+	public static function instance() {
+		return self::get_instance();
+	}
+
+	/**
+	 * Constructor — registers hooks.
+	 *
+	 * @since 1.0.0
+	 */
+	private function __construct() {
+		add_action( 'admin_menu',           array( $this, 'register_menu' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+		add_action( 'wp_ajax_bfo_queue_data', array( $this, 'ajax_queue_data' ) );
+		add_action( 'wp_ajax_bfo_start_packing_session', array( $this, 'ajax_start_session' ) );
+	}
+
+	// -------------------------------------------------------------------------
+	// Menu registration
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Registers the top-level "Fulfillment" menu and its subpages.
+	 *
+	 * @since  1.0.0
+	 * @return void
+	 */
+	public function register_menu() {
+		add_menu_page(
+			esc_html__( 'Fulfillment', 'barcode-fulfillment-orders' ),
+			esc_html__( 'Fulfillment', 'barcode-fulfillment-orders' ),
+			BFO_CAPABILITY_QUEUE,
+			'bfo-queue',
+			array( $this, 'render_queue_page' ),
+			'dashicons-archive',
+			56
+		);
+
+		add_submenu_page(
+			'bfo-queue',
+			esc_html__( 'Order Queue', 'barcode-fulfillment-orders' ),
+			esc_html__( 'Order Queue', 'barcode-fulfillment-orders' ),
+			BFO_CAPABILITY_QUEUE,
+			'bfo-queue',
+			array( $this, 'render_queue_page' )
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// Queue page rendering
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Renders the Order Queue admin page.
+	 *
+	 * @since  1.0.0
+	 * @return void
+	 */
+	public function render_queue_page() {
+		if ( ! current_user_can( BFO_CAPABILITY_QUEUE ) ) {
+			wp_die( esc_html__( 'You do not have permission to view this page.', 'barcode-fulfillment-orders' ) );
+		}
+
+		$refresh = absint( get_option( BFO_OPTION_QUEUE_REFRESH, 30 ) );
+		$orders  = $this->get_queue_orders();
+		?>
+		<div class="wrap bfo-queue-wrap">
+			<h1 class="wp-heading-inline">
+				<?php esc_html_e( 'Order Queue', 'barcode-fulfillment-orders' ); ?>
+			</h1>
+			<span class="bfo-live-badge"><?php esc_html_e( 'Live', 'barcode-fulfillment-orders' ); ?></span>
+			<p class="description">
+				<?php
+				/* translators: %d: refresh interval in seconds */
+				printf( esc_html__( 'Auto-refreshes every %d seconds. Scan an order barcode or click Start Packing.', 'barcode-fulfillment-orders' ), absint( $refresh ) );
+				?>
+			</p>
+
+			<!-- Order barcode scanner input (hidden by default, shown on mobile) -->
+			<div class="bfo-queue-scan-area">
+				<label for="bfo-queue-scan"><?php esc_html_e( 'Scan order barcode:', 'barcode-fulfillment-orders' ); ?></label>
+				<input type="text" id="bfo-queue-scan" class="regular-text" placeholder="<?php esc_attr_e( 'Scan or type order barcode…', 'barcode-fulfillment-orders' ); ?>" autocomplete="off">
+			</div>
+
+			<div id="bfo-queue-container">
+				<?php $this->render_queue_table( $orders ); ?>
+			</div>
+		</div>
+
+		<script>
+		var bfoQueueConfig = {
+			ajaxUrl   : <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>,
+			nonce     : <?php echo wp_json_encode( wp_create_nonce( 'bfo_queue' ) ); ?>,
+			refresh   : <?php echo absint( $refresh ); ?>,
+			packUrl   : <?php echo wp_json_encode( admin_url( 'admin.php?page=bfo-pack-order' ) ); ?>
+		};
+		</script>
+		<?php
+	}
+
+	/**
+	 * Renders the HTML table of orders in the queue.
+	 *
+	 * @since  1.0.0
+	 * @param  array $orders  Array of WC_Order objects.
+	 * @return void
+	 */
+	private function render_queue_table( $orders ) {
+		if ( empty( $orders ) ) {
+			echo '<div class="bfo-empty-queue"><p>' .
+				esc_html__( 'No orders in the queue. Great work!', 'barcode-fulfillment-orders' ) .
+				'</p></div>';
+			return;
+		}
+
+		$generator = BFO_Barcode_Generator::get_instance();
+		$format    = get_option( BFO_OPTION_ORDER_BARCODE_FORMAT, 'code128' );
+		?>
+		<table class="wp-list-table widefat fixed striped bfo-queue-table">
+			<thead>
+			<tr>
+				<th><?php esc_html_e( 'Order', 'barcode-fulfillment-orders' ); ?></th>
+				<th><?php esc_html_e( 'Barcode', 'barcode-fulfillment-orders' ); ?></th>
+				<th><?php esc_html_e( 'Customer', 'barcode-fulfillment-orders' ); ?></th>
+				<th><?php esc_html_e( 'Items', 'barcode-fulfillment-orders' ); ?></th>
+				<th><?php esc_html_e( 'Date', 'barcode-fulfillment-orders' ); ?></th>
+				<th><?php esc_html_e( 'Status', 'barcode-fulfillment-orders' ); ?></th>
+				<th><?php esc_html_e( 'Shipping', 'barcode-fulfillment-orders' ); ?></th>
+				<th><?php esc_html_e( 'Actions', 'barcode-fulfillment-orders' ); ?></th>
+			</tr>
+			</thead>
+			<tbody>
+			<?php foreach ( $orders as $order ) :
+				$barcode    = bfo_get_order_barcode( $order->get_id() );
+				$session    = bfo_get_session_for_order( $order->get_id() );
+				$is_active  = $session && BFO_SESSION_ACTIVE === $session->status;
+				$worker     = $is_active ? get_userdata( (int) $session->worker_id ) : null;
+				$item_count = $order->get_item_count();
+				$shipping   = '';
+				foreach ( $order->get_items( 'shipping' ) as $s_item ) {
+					$shipping = $s_item->get_method_title();
+					break;
+				}
+			?>
+			<tr data-order-id="<?php echo absint( $order->get_id() ); ?>" class="<?php echo $is_active ? 'bfo-row-active' : ''; ?>">
+				<td>
+					<strong>
+						<a href="<?php echo esc_url( $order->get_edit_order_url() ); ?>" target="_blank">
+							#<?php echo absint( $order->get_id() ); ?>
+						</a>
+					</strong>
+				</td>
+				<td class="bfo-barcode-cell">
+					<?php if ( $barcode ) : ?>
+						<code><?php echo esc_html( $barcode ); ?></code>
+						<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						echo $generator->render_inline( $barcode, $format, 30, 1 ); ?>
+					<?php else : ?>
+						<span class="description"><?php esc_html_e( '—', 'barcode-fulfillment-orders' ); ?></span>
+					<?php endif; ?>
+				</td>
+				<td><?php echo esc_html( $order->get_formatted_billing_full_name() ); ?></td>
+				<td>
+					<?php
+					/* translators: %d: number of order items */
+					echo esc_html( sprintf( _n( '%d item', '%d items', $item_count, 'barcode-fulfillment-orders' ), $item_count ) );
+					?>
+				</td>
+				<td><?php echo esc_html( wc_format_datetime( $order->get_date_created() ) ); ?></td>
+				<td>
+					<span class="order-status status-<?php echo esc_attr( $order->get_status() ); ?>">
+						<?php echo esc_html( wc_get_order_status_name( $order->get_status() ) ); ?>
+					</span>
+					<?php if ( $is_active && $worker ) : ?>
+						<br><small class="description">
+							<?php
+							/* translators: %s: worker name */
+							echo esc_html( sprintf( __( 'Packing: %s', 'barcode-fulfillment-orders' ), $worker->display_name ) );
+							?>
+						</small>
+					<?php endif; ?>
+				</td>
+				<td><?php echo esc_html( $shipping ?: '—' ); ?></td>
+				<td>
+					<?php if ( $is_active ) : ?>
+						<span class="description"><?php esc_html_e( 'In progress', 'barcode-fulfillment-orders' ); ?></span>
+					<?php else : ?>
+						<?php
+						$nonce = wp_create_nonce( 'bfo_start_session_' . $order->get_id() );
+						?>
+						<button type="button"
+							class="button button-primary bfo-start-packing"
+							data-order-id="<?php echo absint( $order->get_id() ); ?>"
+							data-nonce="<?php echo esc_attr( $nonce ); ?>">
+							<?php esc_html_e( 'Start Packing', 'barcode-fulfillment-orders' ); ?>
+						</button>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+		<?php
+	}
+
+	// -------------------------------------------------------------------------
+	// Data retrieval
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Returns orders that need to be packed.
+	 *
+	 * @since  1.0.0
+	 * @return WC_Order[]
+	 */
+	public function get_queue_orders() {
+		return wc_get_orders(
+			array(
+				'limit'   => BFO_MAX_QUEUE_ORDERS,
+				'status'  => array( 'processing', 'wc-' . BFO_STATUS_PACKING ),
+				'orderby' => 'date',
+				'order'   => 'ASC',
+			)
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// Assets
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Enqueues scripts and styles for the queue page.
+	 *
+	 * @since  1.0.0
+	 * @param  string $hook  Current admin page hook.
+	 * @return void
+	 */
+	public function enqueue_assets( $hook ) {
+		if ( 'toplevel_page_bfo-queue' !== $hook ) {
+			return;
+		}
+
+		wp_enqueue_script(
+			'bfo-queue',
+			BFO_PLUGIN_URL . 'assets/js/bfo-queue.js',
+			array( 'jquery' ),
+			BFO_VERSION,
+			true
+		);
+
+		wp_enqueue_style(
+			'bfo-admin',
+			BFO_PLUGIN_URL . 'assets/css/bfo-admin.css',
+			array(),
+			BFO_VERSION
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// AJAX handlers
+	// -------------------------------------------------------------------------
+
+	/**
+	 * AJAX: returns refreshed queue HTML for auto-update.
+	 *
+	 * @since  1.0.0
+	 * @return void
+	 */
+	public function ajax_queue_data() {
+		check_ajax_referer( 'bfo_queue', 'nonce' );
+
+		if ( ! current_user_can( BFO_CAPABILITY_QUEUE ) ) {
+			wp_send_json_error( null, 403 );
+		}
+
+		ob_start();
+		$this->render_queue_table( $this->get_queue_orders() );
+		$html = ob_get_clean();
+
+		wp_send_json_success( array( 'html' => $html ) );
+	}
+
+	/**
+	 * AJAX: creates a packing session and redirects to the fulfillment screen.
+	 *
+	 * @since  1.0.0
+	 * @return void
+	 */
+	public function ajax_start_session() {
+		$order_id = absint( $_POST['order_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+		check_ajax_referer( 'bfo_start_session_' . $order_id, 'nonce' );
+
+		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'barcode-fulfillment-orders' ) ), 403 );
+		}
+
+		$result = BFO_Packing_Session::get_instance()->start( $order_id, get_current_user_id() );
+
+		if ( ! $result['success'] ) {
+			wp_send_json_error( array( 'message' => $result['message'] ) );
+		}
+
+		wp_send_json_success(
+			array(
+				'session_id'  => $result['session_id'],
+				'redirect'    => esc_url( bfo_fulfillment_url( $order_id ) . '&session_id=' . absint( $result['session_id'] ) ),
+			)
+		);
+	}
+}

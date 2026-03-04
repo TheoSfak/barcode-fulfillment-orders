@@ -378,7 +378,7 @@ class BFO_Packing_Session {
 	public function auto_pause_idle_sessions() {
 		global $wpdb;
 
-		$timeout_minutes = absint( get_option( BFO_OPTION_SESSION_TIMEOUT, 30 ) );
+		$timeout_minutes = absint( get_option( BFO_OPTION_IDLE_TIMEOUT, 30 ) );
 		if ( 0 === $timeout_minutes ) {
 			return;
 		}

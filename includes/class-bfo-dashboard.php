@@ -241,7 +241,7 @@ class BFO_Dashboard {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL
 		$orders_packed = (int) $wpdb->get_var( $wpdb->prepare(
-			"SELECT COUNT(*) FROM `{$sessions_table}` WHERE status = %s AND DATE(ended_at) = %s",
+			"SELECT COUNT(*) FROM `{$sessions_table}` WHERE status = %s AND DATE(completed_at) = %s",
 			BFO_SESSION_STATUS_COMPLETED,
 			$today
 		) );
@@ -287,7 +287,7 @@ class BFO_Dashboard {
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL
 			$count = (int) $wpdb->get_var( $wpdb->prepare(
-				"SELECT COUNT(*) FROM `{$sessions_table}` WHERE status = %s AND DATE(ended_at) = %s",
+				"SELECT COUNT(*) FROM `{$sessions_table}` WHERE status = %s AND DATE(completed_at) = %s",
 				BFO_SESSION_STATUS_COMPLETED,
 				$date
 			) );
@@ -314,10 +314,10 @@ class BFO_Dashboard {
 		$rows = $wpdb->get_results( $wpdb->prepare(
 			"SELECT worker_id,
 			        COUNT(*) AS orders_completed,
-			        AVG(TIMESTAMPDIFF(SECOND, started_at, ended_at)) AS avg_duration
+			        AVG(TIMESTAMPDIFF(SECOND, started_at, completed_at)) AS avg_duration
 			 FROM `{$sessions_table}`
 			 WHERE status = %s
-			   AND ended_at >= %s
+			   AND completed_at >= %s
 			 GROUP BY worker_id
 			 ORDER BY orders_completed DESC
 			 LIMIT 10",

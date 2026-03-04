@@ -682,7 +682,8 @@ class BFO_Settings {
 			wp_die( esc_html__( 'Security check failed.', 'barcode-fulfillment-orders' ) );
 		}
 
-		BFO_Database::instance()->purge_old_logs();
+		$days = absint( get_option( BFO_OPTION_LOG_RETENTION, 90 ) );
+		BFO_Database::instance()->purge_old_logs( $days );
 
 		wp_safe_redirect(
 			add_query_arg(

@@ -161,11 +161,11 @@ function bfo_generate_unique_barcode( $type = 'order' ) {
 	if ( 'order' === $type ) {
 		$prefix = sanitize_text_field( get_option( BFO_OPTION_ORDER_BARCODE_PREFIX, 'ORD-' ) );
 	} else {
-		$prefix = 'PRD-';
+		$prefix = sanitize_text_field( get_option( BFO_OPTION_PRODUCT_PREFIX, 'PRD-' ) );
 	}
 
 	do {
-		$barcode = strtoupper( $prefix . date( 'YmdHis' ) . wp_rand( 100, 999 ) ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
+		$barcode = strtoupper( $prefix . gmdate( 'YmdHis' ) . wp_rand( 100, 999 ) );
 		// Ensure uniqueness.
 		if ( 'order' === $type ) {
 			$exists = bfo_lookup_order_by_barcode( $barcode );

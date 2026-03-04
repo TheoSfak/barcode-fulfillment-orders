@@ -218,7 +218,7 @@ class BFO_Audit_Trail {
 							$detail_url = add_query_arg( array( 'page' => 'bfo-packing-history', 'session_id' => $s->id ), admin_url( 'admin.php' ) );
 							$order_url  = $s->order_id ? get_edit_post_link( $s->order_id ) : '#';
 							$worker     = $s->worker_id ? get_userdata( $s->worker_id ) : null;
-							$duration   = ( $s->ended_at && $s->started_at ) ? ( strtotime( $s->ended_at ) - strtotime( $s->started_at ) ) : 0;
+							$duration   = ( $s->completed_at && $s->started_at ) ? ( strtotime( $s->completed_at ) - strtotime( $s->started_at ) ) : 0;
 
 							// Scan count.
 							$scan_table = $wpdb->prefix . 'bfo_scan_logs';
@@ -329,14 +329,14 @@ class BFO_Audit_Trail {
 				</tr>
 				<tr>
 					<th><?php esc_html_e( 'Ended', 'barcode-fulfillment-orders' ); ?></th>
-					<td><?php echo esc_html( $session->ended_at   ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $session->ended_at ) )   : '—' ); ?></td>
+				<td><?php echo esc_html( $session->completed_at ? wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $session->completed_at ) ) : '—' ); ?></td>
 				</tr>
 				<tr>
 					<th><?php esc_html_e( 'Duration', 'barcode-fulfillment-orders' ); ?></th>
 					<td>
 						<?php
-						if ( $session->started_at && $session->ended_at ) {
-							$dur = strtotime( $session->ended_at ) - strtotime( $session->started_at );
+						if ( $session->started_at && $session->completed_at ) {
+							$dur = strtotime( $session->completed_at ) - strtotime( $session->started_at );
 							echo esc_html( bfo_format_duration( $dur ) );
 						} else {
 							echo '—';
@@ -383,7 +383,7 @@ class BFO_Audit_Trail {
 										<?php echo esc_html( bfo_scan_action_label( $log->action ) ); ?>
 									</span>
 								</td>
-								<td><?php echo esc_html( $log->notes ?: '' ); ?></td>
+								<td><?php echo esc_html( $log->missing_reason ?: '' ); ?></td>
 							</tr>
 						<?php endforeach; ?>
 					<?php endif; ?>

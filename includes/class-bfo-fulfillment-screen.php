@@ -154,7 +154,7 @@ class BFO_Fulfillment_Screen {
 		$items       = $scanner->build_summary( $session_id, $order );
 		$multi_box   = 'yes' === get_option( BFO_OPTION_MULTI_BOX, 'yes' );
 		$camera_on   = 'yes' === get_option( BFO_OPTION_CAMERA_SCAN, 'yes' );
-		$sound_on    = 'yes' === get_option( BFO_OPTION_SOUND_EFFECTS, 'yes' );
+		$sound_on    = 'yes' === get_option( BFO_OPTION_SOUND_CUES, 'yes' );
 		$reasons     = BFO_Missing_Products::get_reasons();
 
 		// Progress.
@@ -328,8 +328,7 @@ class BFO_Fulfillment_Screen {
 				<h2 id="bfo-missing-modal-title"><?php esc_html_e( 'Mark Item as Missing', 'barcode-fulfillment-orders' ); ?></h2>
 				<p id="bfo-missing-product-name"></p>
 				<form id="bfo-missing-form">
-					<input type="hidden" id="bfo-missing-product-id" name="product_id" value="">
-					<label for="bfo-missing-reason"><?php esc_html_e( 'Reason:', 'barcode-fulfillment-orders' ); ?></label>
+					<input type="hidden" id="bfo-missing-product-id" name="product_id" value="">						<input type="hidden" id="bfo-missing-variation-id" name="variation_id" value="">					<label for="bfo-missing-reason"><?php esc_html_e( 'Reason:', 'barcode-fulfillment-orders' ); ?></label>
 					<select id="bfo-missing-reason" name="reason">
 						<?php foreach ( $reasons as $slug => $label ) : ?>
 						<option value="<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $label ); ?></option>

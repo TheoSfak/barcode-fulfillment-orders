@@ -52,7 +52,7 @@
 			.then( r => r.json() )
 			.then( function ( res ) {
 				if ( res.success && res.data?.html ) {
-					const tableWrap = document.getElementById( 'bfo-queue-table-wrap' );
+				const tableWrap = document.getElementById( 'bfo-queue-container' );
 					if ( tableWrap ) {
 						tableWrap.innerHTML = res.data.html;
 						// Re-bind start buttons after DOM replacement.

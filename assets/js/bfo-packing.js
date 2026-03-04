@@ -25,7 +25,7 @@
 	// -------------------------------------------------------------------------
 	let scanInput, alertArea, progressFill, progressLabel,
 		completeBtn, pauseBtn, cancelBtn, addBoxBtn,
-		missingModal, missingForm, missingProductId, missingQty, missingReason, missingNotes,
+		missingModal, missingForm, missingProductId, missingVariationId, missingQty, missingReason, missingNotes,
 		unacctModal;
 
 	// -------------------------------------------------------------------------
@@ -63,7 +63,8 @@
 		addBoxBtn     = document.getElementById( 'bfo-add-box-btn' );
 		missingModal  = document.getElementById( 'bfo-missing-modal' );
 		missingForm   = document.getElementById( 'bfo-missing-form' );
-		missingProductId = document.getElementById( 'bfo-missing-product-id' );
+		missingProductId  = document.getElementById( 'bfo-missing-product-id' );
+		missingVariationId = document.getElementById( 'bfo-missing-variation-id' );
 		missingQty    = document.getElementById( 'bfo-missing-qty' );
 		missingReason = document.getElementById( 'bfo-missing-reason' );
 		missingNotes  = document.getElementById( 'bfo-missing-notes' );
@@ -356,7 +357,7 @@
 			const btn = e.target.closest( '.bfo-missing-btn' );
 			if ( btn ) {
 				e.preventDefault();
-				openMissingModal( btn.dataset.productId, btn.dataset.remaining || 1 );
+				openMissingModal( btn.dataset.productId, btn.dataset.variationId || '0', btn.dataset.remaining || 1 );
 			}
 		} );
 
@@ -382,9 +383,10 @@
 		}
 	}
 
-	function openMissingModal( productId, remaining ) {
+	function openMissingModal( productId, variationId, remaining ) {
 		if ( ! missingModal ) return;
 		missingProductId.value = productId;
+		if ( missingVariationId ) missingVariationId.value = variationId || '0';
 		missingQty.value       = remaining;
 		missingQty.max         = remaining;
 		missingReason.value    = '';
@@ -399,14 +401,15 @@
 
 	function submitMissing() {
 		const body = new URLSearchParams( {
-			action:     'bfo_mark_missing',
-			security:   cfg.nonces.missing,
-			session_id: cfg.sessionId,
-			order_id:   cfg.orderId,
-			product_id: missingProductId.value,
-			qty:        missingQty.value,
-			reason:     missingReason.value,
-			notes:      missingNotes ? missingNotes.value : '',
+			action:       'bfo_mark_missing',
+			security:     cfg.nonces.missing,
+			session_id:   cfg.sessionId,
+			order_id:     cfg.orderId,
+			product_id:   missingProductId.value,
+			variation_id: missingVariationId ? missingVariationId.value : '0',
+			qty:          missingQty.value,
+			reason:       missingReason.value,
+			notes:        missingNotes ? missingNotes.value : '',
 		} );
 
 		fetch( cfg.ajaxUrl, { method: 'POST', body } )

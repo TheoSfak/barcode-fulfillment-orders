@@ -1,5 +1,5 @@
 === Barcode Fulfillment Orders ===
-Contributors: irmaiden
+Contributors: irmaiden (Theodore Sfakianakis)
 Tags: woocommerce, barcode, fulfillment, warehouse, packing, scanner
 Requires at least: 6.4
 Tested up to: 6.7

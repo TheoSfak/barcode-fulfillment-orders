@@ -250,8 +250,7 @@ class BFO_Fulfillment_Screen {
 						</thead>
 						<tbody>
 						<?php foreach ( $items as $item ) : ?>
-						<tr id="bfo-item-<?php echo absint( $item['product_id'] ); ?>-<?php echo absint( $item['variation_id'] ); ?>"
-							class="bfo-item bfo-status-<?php echo esc_attr( $item['status'] ); ?>">
+						<tr id="bfo-item-<?php echo absint( $item['product_id'] ); ?>-<?php echo absint( $item['variation_id'] ); ?>"						data-product-id="<?php echo absint( $item['product_id'] ); ?>"							class="bfo-item bfo-status-<?php echo esc_attr( $item['status'] ); ?>">
 							<td class="bfo-item-name">
 								<?php echo esc_html( $item['name'] ); ?>
 							</td>
@@ -264,11 +263,10 @@ class BFO_Fulfillment_Screen {
 								<?php endif; ?>
 							</td>
 							<td class="bfo-item-ordered"><?php echo absint( $item['ordered'] ); ?></td>
-							<td class="bfo-item-scanned">
-								<span class="bfo-scan-count"><?php echo absint( $item['scanned'] ); ?></span>
-								/ <?php echo absint( $item['ordered'] ); ?>
-							</td>
-							<td class="bfo-item-status">
+						<td class="bfo-cell-scanned">
+							<span class="bfo-qty-badge bfo-qty-badge--<?php echo esc_attr( $item['status'] ); ?>"><?php echo absint( $item['scanned'] ); ?>/<?php echo absint( $item['ordered'] ); ?></span>
+						</td>
+						<td class="bfo-cell-status">
 								<?php echo esc_html( $this->status_icon( $item['status'] ) ); ?>
 							</td>
 							<td>

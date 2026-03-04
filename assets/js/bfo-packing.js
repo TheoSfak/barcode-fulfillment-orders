@@ -211,15 +211,19 @@
 		if ( ! row ) return;
 
 		const scannedCell = row.querySelector( '.bfo-cell-scanned' );
-		const badgeCell   = row.querySelector( '.bfo-qty-badge' );
 		const statusCell  = row.querySelector( '.bfo-cell-status' );
 		const missingBtn  = row.querySelector( '.bfo-missing-btn' );
 
-		if ( scannedCell ) scannedCell.textContent = item.scanned;
-
-		if ( badgeCell ) {
-			badgeCell.textContent = item.scanned + '/' + item.needed;
-			badgeCell.className   = 'bfo-qty-badge bfo-qty-badge--' + item.status;
+		if ( scannedCell ) {
+			// Prefer the badge span inside the cell; fall back to plain text.
+			const badge = scannedCell.querySelector( '.bfo-qty-badge' );
+			const needed = item.needed !== undefined ? item.needed : item.ordered;
+			if ( badge ) {
+				badge.textContent = item.scanned + '/' + needed;
+				badge.className   = 'bfo-qty-badge bfo-qty-badge--' + item.status;
+			} else {
+				scannedCell.textContent = item.scanned + '/' + needed;
+			}
 		}
 
 		if ( statusCell ) {

@@ -60,8 +60,9 @@ class BFO_Order_Queue {
 	private function __construct() {
 		add_action( 'admin_menu',           array( $this, 'register_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
-		add_action( 'wp_ajax_bfo_queue_data', array( $this, 'ajax_queue_data' ) );
+		add_action( 'wp_ajax_bfo_queue_data',            array( $this, 'ajax_queue_data' ) );
 		add_action( 'wp_ajax_bfo_start_packing_session', array( $this, 'ajax_start_session' ) );
+		add_action( 'wp_ajax_bfo_queue_barcode_search',  array( $this, 'ajax_barcode_search' ) );
 	}
 
 	// -------------------------------------------------------------------------
@@ -127,8 +128,9 @@ class BFO_Order_Queue {
 
 			<!-- Order barcode scanner input (hidden by default, shown on mobile) -->
 			<div class="bfo-queue-scan-area">
-				<label for="bfo-queue-scan"><?php esc_html_e( 'Scan order barcode:', 'barcode-fulfillment-orders' ); ?></label>
-				<input type="text" id="bfo-queue-scan" class="regular-text" placeholder="<?php esc_attr_e( 'Scan or type order barcode…', 'barcode-fulfillment-orders' ); ?>" autocomplete="off">
+				<label for="bfo-queue-barcode-search"><?php esc_html_e( 'Scan order barcode:', 'barcode-fulfillment-orders' ); ?></label>
+				<input type="text" id="bfo-queue-barcode-search" class="regular-text" placeholder="<?php esc_attr_e( 'Scan or type order barcode…', 'barcode-fulfillment-orders' ); ?>" autocomplete="off">
+				<span id="bfo-queue-search-msg" class="description" style="display:none;"></span>
 			</div>
 
 			<div id="bfo-queue-container">
@@ -411,6 +413,52 @@ class BFO_Order_Queue {
 			array(
 				'session_id'  => $result['session_id'],
 				'redirect'    => esc_url( bfo_fulfillment_url( $order_id ) . '&session_id=' . absint( $result['session_id'] ) ),
+			)
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// Queue barcode-search AJAX handler
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Handles the queue barcode search: looks up an order by its barcode value
+	 * and returns the start-packing URL so the JS can redirect the worker.
+	 *
+	 * @since  1.1.0
+	 * @return void  Terminates via wp_send_json_*.
+	 */
+	public function ajax_barcode_search() {
+		check_ajax_referer( 'bfo_queue', 'security' );
+
+		if ( ! current_user_can( BFO_CAPABILITY_QUEUE ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'barcode-fulfillment-orders' ) ), 403 );
+		}
+
+		$barcode  = isset( $_POST['barcode'] ) ? sanitize_text_field( wp_unslash( $_POST['barcode'] ) ) : '';
+		$order_id = bfo_lookup_order_by_barcode( $barcode );
+
+		if ( ! $order_id ) {
+			// Also try treating the raw value as a numeric order ID (manual entry).
+			if ( ctype_digit( $barcode ) ) {
+				$order = wc_get_order( absint( $barcode ) );
+				$order_id = $order ? $order->get_id() : 0;
+			}
+		}
+
+		if ( ! $order_id ) {
+			wp_send_json_error(
+				array( 'message' => __( 'No order found for that barcode.', 'barcode-fulfillment-orders' ) )
+			);
+		}
+
+		$start_nonce = wp_create_nonce( 'bfo_start_session_' . $order_id );
+
+		wp_send_json_success(
+			array(
+				'order_id' => $order_id,
+				'nonce'    => $start_nonce,
+				'redirect' => esc_url( admin_url( 'admin.php?page=bfo-pack-order&order_id=' . $order_id ) ),
 			)
 		);
 	}

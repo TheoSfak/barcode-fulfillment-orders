@@ -42,7 +42,32 @@ class BFO_Dashboard {
 
 	private function __construct() {
 		add_action( 'admin_menu',                    array( $this, 'register_menu' ), 30 );
+		add_action( 'admin_enqueue_scripts',         array( $this, 'enqueue_assets' ) );
 		add_action( 'wp_ajax_bfo_dashboard_refresh', array( $this, 'ajax_refresh' ) );
+	}
+
+	// -------------------------------------------------------------------------
+	// Assets
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Enqueues admin stylesheet on the dashboard page.
+	 *
+	 * @since  1.2.0
+	 * @param  string $hook  Current admin page hook suffix.
+	 * @return void
+	 */
+	public function enqueue_assets( string $hook ): void {
+		if ( 'fulfillment_page_bfo-dashboard' !== $hook ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'bfo-admin',
+			BFO_PLUGIN_URL . 'assets/css/bfo-admin.css',
+			array(),
+			BFO_VERSION
+		);
 	}
 
 	// -------------------------------------------------------------------------

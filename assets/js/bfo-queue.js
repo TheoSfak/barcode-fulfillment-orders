@@ -82,7 +82,7 @@
 
 				const body = new URLSearchParams( {
 					action:   'bfo_start_packing_session',
-					security: cfg.nonces.start,
+					security: btn.dataset.nonce,
 					order_id: orderId,
 				} );
 

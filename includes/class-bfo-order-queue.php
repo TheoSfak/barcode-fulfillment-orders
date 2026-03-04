@@ -138,10 +138,18 @@ class BFO_Order_Queue {
 
 		<script>
 		var bfoQueueConfig = {
-			ajaxUrl   : <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>,
-			nonce     : <?php echo wp_json_encode( wp_create_nonce( 'bfo_queue' ) ); ?>,
-			refresh   : <?php echo absint( $refresh ); ?>,
-			packUrl   : <?php echo wp_json_encode( admin_url( 'admin.php?page=bfo-pack-order' ) ); ?>
+			ajaxUrl : <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>,
+			nonces  : {
+				refresh: <?php echo wp_json_encode( wp_create_nonce( 'bfo_queue' ) ); ?>
+			},
+			refresh : <?php echo absint( $refresh ); ?>,
+			packUrl : <?php echo wp_json_encode( admin_url( 'admin.php?page=bfo-pack-order' ) ); ?>,
+			i18n    : {
+				starting    : <?php echo wp_json_encode( __( 'Starting…', 'barcode-fulfillment-orders' ) ); ?>,
+				startFailed : <?php echo wp_json_encode( __( 'Could not start packing session.', 'barcode-fulfillment-orders' ) ); ?>,
+				networkError: <?php echo wp_json_encode( __( 'Network error — please try again.', 'barcode-fulfillment-orders' ) ); ?>,
+				notFound    : <?php echo wp_json_encode( __( 'Order not found.', 'barcode-fulfillment-orders' ) ); ?>
+			}
 		};
 		</script>
 		<?php
@@ -273,17 +281,17 @@ class BFO_Order_Queue {
 						$nonce = wp_create_nonce( 'bfo_start_session_' . $order->get_id() );
 						?>
 						<button type="button"
-							class="button button-primary bfo-start-packing"
-							data-order-id="<?php echo absint( $order->get_id() ); ?>"
-							data-nonce="<?php echo esc_attr( $nonce ); ?>">
-							<?php esc_html_e( 'Resume Packing', 'barcode-fulfillment-orders' ); ?>
-						</button>
+						class="button button-primary bfo-start-packing-btn"
+						data-order-id="<?php echo absint( $order->get_id() ); ?>"
+						data-nonce="<?php echo esc_attr( $nonce ); ?>">
+						<?php esc_html_e( 'Resume Packing', 'barcode-fulfillment-orders' ); ?>
+					</button>
 					<?php else : ?>
 						<?php
 						$nonce = wp_create_nonce( 'bfo_start_session_' . $order->get_id() );
 						?>
 						<button type="button"
-							class="button button-primary bfo-start-packing"
+							class="button button-primary bfo-start-packing-btn"
 							data-order-id="<?php echo absint( $order->get_id() ); ?>"
 							data-nonce="<?php echo esc_attr( $nonce ); ?>">
 							<?php esc_html_e( 'Start Packing', 'barcode-fulfillment-orders' ); ?>

@@ -346,7 +346,7 @@ class BFO_Order_Queue {
 	 * @return void
 	 */
 	public function ajax_queue_data() {
-		check_ajax_referer( 'bfo_queue', 'nonce' );
+		check_ajax_referer( 'bfo_queue', 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_QUEUE ) ) {
 			wp_send_json_error( null, 403 );
@@ -368,7 +368,7 @@ class BFO_Order_Queue {
 	public function ajax_start_session() {
 		$order_id = absint( $_POST['order_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
-		check_ajax_referer( 'bfo_start_session_' . $order_id, 'nonce' );
+		check_ajax_referer( 'bfo_start_session_' . $order_id, 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
 			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'barcode-fulfillment-orders' ) ), 403 );

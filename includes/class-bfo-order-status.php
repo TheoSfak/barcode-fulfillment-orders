@@ -115,10 +115,6 @@ class BFO_Order_Status {
 				'label_count'               => _n_noop( 'Shipped <span class="count">(%s)</span>', 'Shipped <span class="count">(%s)</span>', 'barcode-fulfillment-orders' ),
 			)
 		);
-				/* translators: %s: number of orders */
-				'label_count'               => _n_noop( 'Packed <span class="count">(%s)</span>', 'Packed <span class="count">(%s)</span>', 'barcode-fulfillment-orders' ),
-			)
-		);
 	}
 
 	/**

@@ -193,9 +193,9 @@ class BFO_Fulfillment_Screen {
 			<!-- ===== PROGRESS BAR ===== -->
 			<div class="bfo-progress-wrap">
 				<div class="bfo-progress-bar">
-					<div class="bfo-progress-fill" style="width:<?php echo absint( $progress_pct ); ?>%"></div>
+					<div id="bfo-progress-fill" class="bfo-progress-fill" style="width:<?php echo absint( $progress_pct ); ?>%"></div>
 				</div>
-				<span class="bfo-progress-label">
+				<span id="bfo-progress-label" class="bfo-progress-label">
 					<?php
 					/* translators: 1: accounted count 2: total count 3: percentage */
 					printf( esc_html__( '%1$d / %2$d items (%3$d%%)', 'barcode-fulfillment-orders' ), absint( $total_accounted ), absint( $total_ordered ), absint( $progress_pct ) );
@@ -204,7 +204,7 @@ class BFO_Fulfillment_Screen {
 			</div>
 
 			<!-- ===== ALERT AREA ===== -->
-			<div class="bfo-alert-area" id="bfo-alert" role="alert" aria-live="assertive"></div>
+			<div class="bfo-alert-area" id="bfo-alert-area" role="alert" aria-live="assertive"></div>
 
 			<!-- ===== SCANNER INPUT ===== -->
 			<div class="bfo-scanner-area">
@@ -273,10 +273,10 @@ class BFO_Fulfillment_Screen {
 							</td>
 							<td>
 								<button type="button"
-									class="button-link bfo-mark-missing-btn"
-									data-product-id="<?php echo absint( $item['product_id'] ); ?>"
-									data-variation-id="<?php echo absint( $item['variation_id'] ); ?>"
-									data-ordered="<?php echo absint( $item['ordered'] ); ?>"
+								class="button-link bfo-missing-btn"
+								data-product-id="<?php echo absint( $item['product_id'] ); ?>"
+								data-variation-id="<?php echo absint( $item['variation_id'] ); ?>"
+								data-remaining="<?php echo absint( max( 0, $item['ordered'] - $item['scanned'] ) ); ?>"
 									data-name="<?php echo esc_attr( $item['name'] ); ?>"
 									<?php echo ( 'complete' === $item['status'] ) ? 'disabled' : ''; ?>>
 									<?php esc_html_e( 'Missing', 'barcode-fulfillment-orders' ); ?>
@@ -292,16 +292,17 @@ class BFO_Fulfillment_Screen {
 				<?php if ( $multi_box ) : ?>
 				<div class="bfo-box-panel-wrap">
 					<h2><?php esc_html_e( 'Boxes', 'barcode-fulfillment-orders' ); ?></h2>
-					<div class="bfo-box-list" id="bfo-box-list">
-						<?php foreach ( $boxes as $box ) : ?>
-						<div class="bfo-box <?php echo ( 1 === count( $boxes ) ) ? 'bfo-box-active' : ''; ?>"
-							 data-box-id="<?php echo absint( $box['id'] ); ?>"
-							 data-box-number="<?php echo absint( $box['box_number'] ); ?>">
-							<strong><?php echo esc_html( $box['label'] ); ?></strong>
-						</div>
-						<?php endforeach; ?>
-					</div>
-					<button type="button" class="button" id="bfo-add-box">
+				<div class="bfo-box-tabs" id="bfo-box-tabs">
+					<?php foreach ( $boxes as $box ) : ?>
+					<button type="button"
+						class="button bfo-box-tab <?php echo ( 1 === count( $boxes ) ) ? 'bfo-box-tab--active' : ''; ?>"
+						data-box-id="<?php echo absint( $box['id'] ); ?>"
+						data-box-number="<?php echo absint( $box['box_number'] ); ?>">
+						<?php echo esc_html( $box['label'] ); ?>
+					</button>
+					<?php endforeach; ?>
+				</div>
+				<button type="button" class="button" id="bfo-add-box-btn">
 						+ <?php esc_html_e( 'New Box', 'barcode-fulfillment-orders' ); ?>
 					</button>
 				</div>
@@ -328,26 +329,29 @@ class BFO_Fulfillment_Screen {
 			<div class="bfo-modal-inner">
 				<h2 id="bfo-missing-modal-title"><?php esc_html_e( 'Mark Item as Missing', 'barcode-fulfillment-orders' ); ?></h2>
 				<p id="bfo-missing-product-name"></p>
-				<label for="bfo-missing-reason"><?php esc_html_e( 'Reason:', 'barcode-fulfillment-orders' ); ?></label>
-				<select id="bfo-missing-reason">
-					<?php foreach ( $reasons as $slug => $label ) : ?>
-					<option value="<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $label ); ?></option>
-					<?php endforeach; ?>
-				</select>
-				<div id="bfo-missing-notes-wrap">
-					<label for="bfo-missing-notes"><?php esc_html_e( 'Additional notes:', 'barcode-fulfillment-orders' ); ?></label>
-					<input type="text" id="bfo-missing-notes" class="regular-text">
-				</div>
-				<label for="bfo-missing-quantity"><?php esc_html_e( 'Missing quantity:', 'barcode-fulfillment-orders' ); ?></label>
-				<input type="number" id="bfo-missing-quantity" min="1" value="1" class="small-text">
-				<div class="bfo-modal-buttons">
-					<button type="button" class="button button-primary" id="bfo-missing-confirm">
-						<?php esc_html_e( 'Confirm Missing', 'barcode-fulfillment-orders' ); ?>
-					</button>
-					<button type="button" class="button" id="bfo-missing-cancel">
-						<?php esc_html_e( 'Cancel', 'barcode-fulfillment-orders' ); ?>
-					</button>
-				</div>
+				<form id="bfo-missing-form">
+					<input type="hidden" id="bfo-missing-product-id" name="product_id" value="">
+					<label for="bfo-missing-reason"><?php esc_html_e( 'Reason:', 'barcode-fulfillment-orders' ); ?></label>
+					<select id="bfo-missing-reason" name="reason">
+						<?php foreach ( $reasons as $slug => $label ) : ?>
+						<option value="<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $label ); ?></option>
+						<?php endforeach; ?>
+					</select>
+					<div id="bfo-missing-notes-wrap">
+						<label for="bfo-missing-notes"><?php esc_html_e( 'Additional notes:', 'barcode-fulfillment-orders' ); ?></label>
+						<input type="text" id="bfo-missing-notes" name="notes" class="regular-text">
+					</div>
+					<label for="bfo-missing-qty"><?php esc_html_e( 'Missing quantity:', 'barcode-fulfillment-orders' ); ?></label>
+					<input type="number" id="bfo-missing-qty" name="qty" min="1" value="1" class="small-text">
+					<div class="bfo-modal-buttons">
+						<button type="submit" class="button button-primary" id="bfo-missing-confirm">
+							<?php esc_html_e( 'Confirm Missing', 'barcode-fulfillment-orders' ); ?>
+						</button>
+						<button type="button" class="button" id="bfo-missing-modal-close">
+							<?php esc_html_e( 'Cancel', 'barcode-fulfillment-orders' ); ?>
+						</button>
+					</div>
+				</form>
 			</div>
 		</div>
 		<div class="bfo-modal-backdrop" id="bfo-modal-backdrop" style="display:none;"></div>
@@ -367,31 +371,56 @@ class BFO_Fulfillment_Screen {
 		</div>
 
 		<!-- Config for JS -->
+		<?php
+		$items_for_js = array_map(
+			function ( $it ) {
+				return array(
+					'product_id' => (int) $it['product_id'],
+					'needed'     => (int) $it['ordered'],
+					'scanned'    => (int) $it['scanned'],
+					'status'     => $it['status'],
+				);
+			},
+			$items
+		);
+		$first_box_id = ! empty( $boxes ) ? (int) $boxes[0]['id'] : 0;
+		?>
 		<script>
 		var bfoPackConfig = {
-			ajaxUrl    : <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>,
-			sessionId  : <?php echo absint( $session_id ); ?>,
-			orderId    : <?php echo absint( $order_id ); ?>,
-			scanNonce  : <?php echo wp_json_encode( $scan_nonce ); ?>,
-			sessNonce  : <?php echo wp_json_encode( $session_nonce ); ?>,
-			resumeNonce: <?php echo wp_json_encode( wp_create_nonce( 'bfo_resume_session_' . $session_id ) ); ?>,
-			queueUrl   : <?php echo wp_json_encode( admin_url( 'admin.php?page=bfo-queue' ) ); ?>,
-			heartbeat  : 30,
-			soundOn    : <?php echo $sound_on ? 'true' : 'false'; ?>,
-			cameraOn   : <?php echo $camera_on ? 'true' : 'false'; ?>,
-			multiBox   : <?php echo $multi_box ? 'true' : 'false'; ?>,
-			currentBox : 1,
+			ajaxUrl   : <?php echo wp_json_encode( admin_url( 'admin-ajax.php' ) ); ?>,
+			sessionId : <?php echo absint( $session_id ); ?>,
+			orderId   : <?php echo absint( $order_id ); ?>,
+			nonces    : {
+				scan     : <?php echo wp_json_encode( $scan_nonce ); ?>,
+				pause    : <?php echo wp_json_encode( $session_nonce ); ?>,
+				cancel   : <?php echo wp_json_encode( $session_nonce ); ?>,
+				complete : <?php echo wp_json_encode( $scan_nonce ); ?>,
+				missing  : <?php echo wp_json_encode( $scan_nonce ); ?>,
+				box      : <?php echo wp_json_encode( $scan_nonce ); ?>,
+				heartbeat: <?php echo wp_json_encode( $session_nonce ); ?>,
+			},
+			firstBoxId: <?php echo absint( $first_box_id ); ?>,
+			items     : <?php echo wp_json_encode( $items_for_js ); ?>,
+			queueUrl  : <?php echo wp_json_encode( admin_url( 'admin.php?page=bfo-queue' ) ); ?>,
+			heartbeat : 30,
+			soundOn   : <?php echo $sound_on ? 'true' : 'false'; ?>,
+			cameraOn  : <?php echo $camera_on ? 'true' : 'false'; ?>,
+			multiBox  : <?php echo $multi_box ? 'true' : 'false'; ?>,
 			i18n: {
-				scanning      : <?php echo wp_json_encode( __( 'Processing…', 'barcode-fulfillment-orders' ) ); ?>,
-				success       : <?php echo wp_json_encode( __( 'Scanned!', 'barcode-fulfillment-orders' ) ); ?>,
-				complete      : <?php echo wp_json_encode( __( '✓ Complete', 'barcode-fulfillment-orders' ) ); ?>,
-				partial       : <?php echo wp_json_encode( __( '⏳ Partial', 'barcode-fulfillment-orders' ) ); ?>,
-				missing_status: <?php echo wp_json_encode( __( '✕ Missing', 'barcode-fulfillment-orders' ) ); ?>,
-				pending       : <?php echo wp_json_encode( __( '○ Pending', 'barcode-fulfillment-orders' ) ); ?>,
-				pauseConfirm  : <?php echo wp_json_encode( __( 'Pause this packing session?', 'barcode-fulfillment-orders' ) ); ?>,
-				cancelConfirm : <?php echo wp_json_encode( __( 'Cancel this session? Scans will be lost.', 'barcode-fulfillment-orders' ) ); ?>,
-				orderDone     : <?php echo wp_json_encode( __( 'Order fully packed! Redirecting…', 'barcode-fulfillment-orders' ) ); ?>,
-			}
+				scanSuccess        : <?php echo wp_json_encode( __( 'Scanned!', 'barcode-fulfillment-orders' ) ); ?>,
+				orderBarcodeScanned: <?php echo wp_json_encode( __( 'Order barcode scanned.', 'barcode-fulfillment-orders' ) ); ?>,
+				overScan           : <?php echo wp_json_encode( __( 'Item already fully scanned!', 'barcode-fulfillment-orders' ) ); ?>,
+				wrongProduct       : <?php echo wp_json_encode( __( 'This product is not in this order.', 'barcode-fulfillment-orders' ) ); ?>,
+				unknownBarcode     : <?php echo wp_json_encode( __( 'Barcode not recognised.', 'barcode-fulfillment-orders' ) ); ?>,
+				unknownError       : <?php echo wp_json_encode( __( 'An unknown error occurred.', 'barcode-fulfillment-orders' ) ); ?>,
+				networkError       : <?php echo wp_json_encode( __( 'Network error — please try again.', 'barcode-fulfillment-orders' ) ); ?>,
+				completeFailed     : <?php echo wp_json_encode( __( 'Could not complete order.', 'barcode-fulfillment-orders' ) ); ?>,
+				actionFailed       : <?php echo wp_json_encode( __( 'Action failed — please try again.', 'barcode-fulfillment-orders' ) ); ?>,
+				confirmCancel      : <?php echo wp_json_encode( __( 'Cancel this session? Scans will be lost.', 'barcode-fulfillment-orders' ) ); ?>,
+				markedMissing      : <?php echo wp_json_encode( __( 'Item marked as missing.', 'barcode-fulfillment-orders' ) ); ?>,
+				needed             : <?php echo wp_json_encode( __( 'needed', 'barcode-fulfillment-orders' ) ); ?>,
+				scanned            : <?php echo wp_json_encode( __( 'scanned', 'barcode-fulfillment-orders' ) ); ?>,
+			},
 		};
 		</script>
 		<?php
@@ -409,7 +438,7 @@ class BFO_Fulfillment_Screen {
 	 * @return void
 	 */
 	public function enqueue_assets( $hook ) {
-		if ( 'fulfillment_page_bfo-pack-order' !== $hook ) {
+		if ( false === strpos( $hook, 'bfo-pack-order' ) ) {
 			return;
 		}
 

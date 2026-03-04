@@ -81,7 +81,7 @@ class BFO_Scanner {
 	public function ajax_process_scan() {
 		$session_id = absint( $_POST['session_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
-		check_ajax_referer( 'bfo_scan_' . $session_id, 'nonce' );
+		check_ajax_referer( 'bfo_scan_' . $session_id, 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
 			wp_send_json_error( array( 'type' => 'error', 'message' => __( 'Permission denied.', 'barcode-fulfillment-orders' ) ), 403 );
@@ -260,7 +260,7 @@ class BFO_Scanner {
 	public function ajax_complete_order() {
 		$session_id = absint( $_POST['session_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
-		check_ajax_referer( 'bfo_scan_' . $session_id, 'nonce' );
+		check_ajax_referer( 'bfo_scan_' . $session_id, 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
 			wp_send_json_error( array( 'type' => 'error', 'message' => __( 'Permission denied.', 'barcode-fulfillment-orders' ) ), 403 );

@@ -193,7 +193,7 @@ class BFO_Missing_Products {
 	public function ajax_mark_missing() {
 		$session_id = absint( $_POST['session_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
-		check_ajax_referer( 'bfo_scan_' . $session_id, 'nonce' );
+		check_ajax_referer( 'bfo_scan_' . $session_id, 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
 			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'barcode-fulfillment-orders' ) ), 403 );
@@ -201,7 +201,7 @@ class BFO_Missing_Products {
 
 		$product_id   = absint( $_POST['product_id'] ?? 0 );   // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$variation_id = absint( $_POST['variation_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$quantity     = absint( $_POST['quantity'] ?? 1 );      // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$quantity     = absint( $_POST['qty'] ?? $_POST['quantity'] ?? 1 );      // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$reason       = sanitize_text_field( wp_unslash( $_POST['reason'] ?? 'other' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$notes        = sanitize_text_field( wp_unslash( $_POST['notes'] ?? '' ) );       // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$box_number   = absint( $_POST['box_number'] ?? 1 );    // phpcs:ignore WordPress.Security.NonceVerification.Missing

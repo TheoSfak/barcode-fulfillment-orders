@@ -183,7 +183,7 @@ class BFO_Multi_Box {
 	public function ajax_add_box() {
 		$session_id = absint( $_POST['session_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
-		check_ajax_referer( 'bfo_scan_' . $session_id, 'nonce' );
+		check_ajax_referer( 'bfo_scan_' . $session_id, 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
 			wp_send_json_error( null, 403 );
@@ -202,7 +202,7 @@ class BFO_Multi_Box {
 	public function ajax_update_box() {
 		$session_id = absint( $_POST['session_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
-		check_ajax_referer( 'bfo_scan_' . $session_id, 'nonce' );
+		check_ajax_referer( 'bfo_scan_' . $session_id, 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
 			wp_send_json_error( null, 403 );
@@ -227,7 +227,7 @@ class BFO_Multi_Box {
 	public function ajax_get_boxes() {
 		$session_id = absint( $_GET['session_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		check_ajax_referer( 'bfo_scan_' . $session_id, 'nonce' );
+		check_ajax_referer( 'bfo_scan_' . $session_id, 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
 			wp_send_json_error( null, 403 );

@@ -402,7 +402,7 @@ class BFO_Product_Barcode {
 	public function ajax_generate_barcode() {
 		$product_id = absint( $_POST['product_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
-		check_ajax_referer( 'bfo_generate_product_barcode_' . $product_id, 'nonce' );
+check_ajax_referer( 'bfo_generate_product_barcode_' . $product_id, 'security' );
 
 		if ( ! current_user_can( 'edit_post', $product_id ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Permission denied.', 'barcode-fulfillment-orders' ) ), 403 );

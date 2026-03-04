@@ -379,7 +379,7 @@ class BFO_Packing_Session {
 	 */
 	public function ajax_heartbeat() {
 		$session_id = absint( $_POST['session_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		check_ajax_referer( 'bfo_session_' . $session_id, 'nonce' );
+		check_ajax_referer( 'bfo_session_' . $session_id, 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
 			wp_send_json_error( null, 403 );
@@ -401,7 +401,7 @@ class BFO_Packing_Session {
 	 */
 	public function ajax_pause() {
 		$session_id = absint( $_POST['session_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		check_ajax_referer( 'bfo_session_' . $session_id, 'nonce' );
+		check_ajax_referer( 'bfo_session_' . $session_id, 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
 			wp_send_json_error( null, 403 );
@@ -419,7 +419,7 @@ class BFO_Packing_Session {
 	 */
 	public function ajax_resume() {
 		$session_id = absint( $_POST['session_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		check_ajax_referer( 'bfo_resume_session_' . $session_id, 'nonce' );
+		check_ajax_referer( 'bfo_resume_session_' . $session_id, 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
 			wp_send_json_error( null, 403 );
@@ -437,7 +437,7 @@ class BFO_Packing_Session {
 	 */
 	public function ajax_cancel() {
 		$session_id = absint( $_POST['session_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		check_ajax_referer( 'bfo_session_' . $session_id, 'nonce' );
+		check_ajax_referer( 'bfo_session_' . $session_id, 'security' );
 
 		if ( ! current_user_can( BFO_CAPABILITY_PACK ) ) {
 			wp_send_json_error( null, 403 );

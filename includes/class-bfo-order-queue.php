@@ -288,6 +288,8 @@ class BFO_Order_Queue {
 						data-nonce="<?php echo esc_attr( $nonce ); ?>">
 						<?php esc_html_e( 'Resume Packing', 'barcode-fulfillment-orders' ); ?>
 					</button>
+					<?php elseif ( $is_packed ) : ?>
+						<span class="bfo-packed-badge">&#10003; <?php esc_html_e( 'Packed', 'barcode-fulfillment-orders' ); ?></span>
 					<?php else : ?>
 						<?php
 						$nonce = wp_create_nonce( 'bfo_start_session_' . $order->get_id() );

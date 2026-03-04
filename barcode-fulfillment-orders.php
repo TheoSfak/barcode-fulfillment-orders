@@ -126,6 +126,9 @@ define( 'BFO_OPTION_EMAIL_PACKED', 'bfo_email_packed' );
 /** Option: enable missing items admin notification email (yes/no). */
 define( 'BFO_OPTION_EMAIL_MISSING', 'bfo_email_missing' );
 
+/** Option: default recipient email for the Pick List email (blank = admin email). */
+define( 'BFO_OPTION_PICK_LIST_RECIPIENT', 'bfo_pick_list_recipient' );
+
 /** Option: audit log retention in days (0 = keep forever). */
 define( 'BFO_OPTION_LOG_RETENTION', 'bfo_log_retention' );
 
@@ -343,6 +346,7 @@ function bfo_init() {
 	require_once BFO_PLUGIN_DIR . 'includes/class-bfo-audit-trail.php';
 	require_once BFO_PLUGIN_DIR . 'includes/class-bfo-dashboard.php';
 	require_once BFO_PLUGIN_DIR . 'includes/class-bfo-labels.php';
+	require_once BFO_PLUGIN_DIR . 'includes/class-bfo-pick-list.php';
 
 	// Shipping integration.
 	require_once BFO_PLUGIN_DIR . 'includes/class-bfo-shipping.php';
@@ -365,6 +369,7 @@ function bfo_init() {
 	BFO_Audit_Trail::instance();
 	BFO_Dashboard::instance();
 	BFO_Labels::instance();
+	BFO_Pick_List::instance();
 	BFO_Emails::instance();
 	BFO_Shipping::instance();
 }

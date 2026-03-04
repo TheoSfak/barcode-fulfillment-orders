@@ -76,9 +76,11 @@ class BFO_Emails {
 	public function register_emails( $email_class_instances ) {
 		require_once BFO_PLUGIN_DIR . 'includes/emails/class-bfo-email-order-packed.php';
 		require_once BFO_PLUGIN_DIR . 'includes/emails/class-bfo-email-missing-items-admin.php';
+		require_once BFO_PLUGIN_DIR . 'includes/emails/class-bfo-email-pick-list.php';
 
 		$email_class_instances['BFO_Email_Order_Packed']          = new BFO_Email_Order_Packed();
 		$email_class_instances['BFO_Email_Missing_Items_Admin']    = new BFO_Email_Missing_Items_Admin();
+		$email_class_instances['BFO_Email_Pick_List']             = new BFO_Email_Pick_List();
 
 		return $email_class_instances;
 	}
@@ -127,6 +129,23 @@ class BFO_Emails {
 
 		if ( isset( $emails['BFO_Email_Missing_Items_Admin'] ) ) {
 			$emails['BFO_Email_Missing_Items_Admin']->trigger( $order_id, $order, $missing_items );
+		}
+	}
+
+	/**
+	 * Sends the Pick List email to the given address.
+	 *
+	 * @since  1.2.0
+	 * @param  WC_Order[] $orders  Orders to include in the pick list.
+	 * @param  string     $to      Recipient email address.
+	 * @return void
+	 */
+	public static function send_pick_list_email( array $orders, string $to ): void {
+		$mailer = WC()->mailer();
+		$emails = $mailer->get_emails();
+
+		if ( isset( $emails['BFO_Email_Pick_List'] ) ) {
+			$emails['BFO_Email_Pick_List']->trigger( $orders, $to );
 		}
 	}
 }

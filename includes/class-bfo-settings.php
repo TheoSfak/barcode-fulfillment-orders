@@ -158,10 +158,11 @@ class BFO_Settings {
 	 */
 	private function get_tabs(): array {
 		return array(
-			'general'       => __( 'General', 'barcode-fulfillment-orders' ),
-			'fulfillment'   => __( 'Fulfillment', 'barcode-fulfillment-orders' ),
+			'general'       => __( 'General',       'barcode-fulfillment-orders' ),
+			'fulfillment'   => __( 'Fulfillment',   'barcode-fulfillment-orders' ),
 			'notifications' => __( 'Notifications', 'barcode-fulfillment-orders' ),
-			'data'          => __( 'Data', 'barcode-fulfillment-orders' ),
+			'shipping'      => __( 'Shipping',      'barcode-fulfillment-orders' ),
+			'data'          => __( 'Data',          'barcode-fulfillment-orders' ),
 		);
 	}
 
@@ -181,6 +182,7 @@ class BFO_Settings {
 			'general'       => $this->render_general_tab(),
 			'fulfillment'   => $this->render_fulfillment_tab(),
 			'notifications' => $this->render_notifications_tab(),
+			'shipping'      => $this->render_shipping_tab(),
 			'data'          => null,
 			default         => $this->render_general_tab(),
 		};
@@ -440,6 +442,7 @@ class BFO_Settings {
 			'general'       => $this->save_general(),
 			'fulfillment'   => $this->save_fulfillment(),
 			'notifications' => $this->save_notifications(),
+			'shipping'      => $this->save_shipping(),
 			'data'          => $this->save_data(),
 			default         => null,
 		};
@@ -489,6 +492,183 @@ class BFO_Settings {
 	private function save_data(): void {
 		$days = isset( $_POST['bfo_log_retention'] ) ? absint( $_POST['bfo_log_retention'] ) : 90;
 		update_option( BFO_OPTION_LOG_RETENTION, $days );
+	}
+
+	// =========================================================================
+	// Shipping tab
+	// =========================================================================
+
+	/**
+	 * Renders the Shipping settings tab.
+	 *
+	 * @since  1.1.0
+	 * @return void
+	 */
+	private function render_shipping_tab(): void {
+		$provider   = get_option( BFO_OPTION_SHIPPING_PROVIDER, 'none' );
+		$shippo_key = get_option( BFO_OPTION_SHIPPO_API_KEY, '' );
+		$ep_key     = get_option( BFO_OPTION_EASYPOST_API_KEY, '' );
+		$auto_ship  = get_option( BFO_OPTION_AUTO_SHIP_ON_PACK, 'no' );
+
+		// From-address fields.
+		$from = array(
+			'name'    => get_option( BFO_OPTION_SHIPPING_FROM_NAME,    '' ),
+			'company' => get_option( BFO_OPTION_SHIPPING_FROM_COMPANY, '' ),
+			'street1' => get_option( BFO_OPTION_SHIPPING_FROM_STREET1, '' ),
+			'street2' => get_option( BFO_OPTION_SHIPPING_FROM_STREET2, '' ),
+			'city'    => get_option( BFO_OPTION_SHIPPING_FROM_CITY,    '' ),
+			'state'   => get_option( BFO_OPTION_SHIPPING_FROM_STATE,   '' ),
+			'zip'     => get_option( BFO_OPTION_SHIPPING_FROM_ZIP,     '' ),
+			'country' => get_option( BFO_OPTION_SHIPPING_FROM_COUNTRY, 'US' ),
+			'phone'   => get_option( BFO_OPTION_SHIPPING_FROM_PHONE,   '' ),
+			'email'   => get_option( BFO_OPTION_SHIPPING_FROM_EMAIL,   get_option( 'admin_email' ) ),
+		);
+
+		// Default parcel.
+		$length    = get_option( BFO_OPTION_DEFAULT_LENGTH,    10 );
+		$width     = get_option( BFO_OPTION_DEFAULT_WIDTH,      8 );
+		$height    = get_option( BFO_OPTION_DEFAULT_HEIGHT,     4 );
+		$weight    = get_option( BFO_OPTION_DEFAULT_WEIGHT,    16 );
+		$dist_unit = get_option( BFO_OPTION_DEFAULT_DIST_UNIT, 'in' );
+		$mass_unit = get_option( BFO_OPTION_DEFAULT_MASS_UNIT, 'oz' );
+		?>
+		<!-- ---- Provider ---- -->
+		<tr><th colspan="2"><h3 style="margin:0;"><?php esc_html_e( 'Provider', 'barcode-fulfillment-orders' ); ?></h3></th></tr>
+		<tr>
+			<th scope="row"><label for="bfo_shipping_provider"><?php esc_html_e( 'Shipping Provider', 'barcode-fulfillment-orders' ); ?></label></th>
+			<td>
+				<select name="bfo_shipping_provider" id="bfo_shipping_provider">
+					<option value="none"     <?php selected( $provider, 'none' ); ?>><?php esc_html_e( '— None —',  'barcode-fulfillment-orders' ); ?></option>
+					<option value="shippo"   <?php selected( $provider, 'shippo' ); ?>><?php esc_html_e( 'Shippo',    'barcode-fulfillment-orders' ); ?></option>
+					<option value="easypost" <?php selected( $provider, 'easypost' ); ?>><?php esc_html_e( 'EasyPost', 'barcode-fulfillment-orders' ); ?></option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><label for="bfo_shippo_api_key"><?php esc_html_e( 'Shippo API Key', 'barcode-fulfillment-orders' ); ?></label></th>
+			<td>
+				<input type="password" name="bfo_shippo_api_key" id="bfo_shippo_api_key"
+				       value="<?php echo esc_attr( $shippo_key ); ?>" class="regular-text" autocomplete="new-password">
+				<p class="description"><?php esc_html_e( 'Required when Provider is Shippo.', 'barcode-fulfillment-orders' ); ?></p>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><label for="bfo_easypost_api_key"><?php esc_html_e( 'EasyPost API Key', 'barcode-fulfillment-orders' ); ?></label></th>
+			<td>
+				<input type="password" name="bfo_easypost_api_key" id="bfo_easypost_api_key"
+				       value="<?php echo esc_attr( $ep_key ); ?>" class="regular-text" autocomplete="new-password">
+				<p class="description"><?php esc_html_e( 'Required when Provider is EasyPost.', 'barcode-fulfillment-orders' ); ?></p>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><?php esc_html_e( 'Auto-Ship on Pack', 'barcode-fulfillment-orders' ); ?></th>
+			<td>
+				<label>
+					<input type="checkbox" name="bfo_auto_ship_on_pack" value="yes" <?php checked( $auto_ship, 'yes' ); ?>>
+					<?php esc_html_e( 'Automatically purchase the cheapest label when an order is marked Packed.', 'barcode-fulfillment-orders' ); ?>
+				</label>
+			</td>
+		</tr>
+
+		<!-- ---- From Address ---- -->
+		<tr><th colspan="2"><h3 style="margin:16px 0 0;"><?php esc_html_e( 'Ship-From Address', 'barcode-fulfillment-orders' ); ?></h3></th></tr>
+		<?php
+		$addr_fields = array(
+			'name'    => __( 'Sender Name',      'barcode-fulfillment-orders' ),
+			'company' => __( 'Company',          'barcode-fulfillment-orders' ),
+			'street1' => __( 'Street Address',   'barcode-fulfillment-orders' ),
+			'street2' => __( 'Street Address 2', 'barcode-fulfillment-orders' ),
+			'city'    => __( 'City',             'barcode-fulfillment-orders' ),
+			'state'   => __( 'State / Province', 'barcode-fulfillment-orders' ),
+			'zip'     => __( 'ZIP / Postal Code','barcode-fulfillment-orders' ),
+			'country' => __( 'Country Code',     'barcode-fulfillment-orders' ),
+			'phone'   => __( 'Phone',            'barcode-fulfillment-orders' ),
+			'email'   => __( 'Email',            'barcode-fulfillment-orders' ),
+		);
+		foreach ( $addr_fields as $key => $label ) :
+			$opt_name = 'bfo_shipping_from_' . $key;
+			?>
+			<tr>
+				<th scope="row"><label for="<?php echo esc_attr( $opt_name ); ?>"><?php echo esc_html( $label ); ?></label></th>
+				<td>
+					<input type="text" name="<?php echo esc_attr( $opt_name ); ?>" id="<?php echo esc_attr( $opt_name ); ?>"
+					       value="<?php echo esc_attr( $from[ $key ] ); ?>" class="regular-text">
+					<?php if ( 'country' === $key ) : ?>
+						<p class="description"><?php esc_html_e( 'ISO 3166-1 alpha-2 code, e.g. US, GB, DE.', 'barcode-fulfillment-orders' ); ?></p>
+					<?php endif; ?>
+				</td>
+			</tr>
+		<?php endforeach; ?>
+
+		<!-- ---- Default Parcel ---- -->
+		<tr><th colspan="2"><h3 style="margin:16px 0 0;"><?php esc_html_e( 'Default Package Dimensions', 'barcode-fulfillment-orders' ); ?></h3></th></tr>
+		<tr>
+			<th scope="row"><?php esc_html_e( 'Dimensions (L × W × H)', 'barcode-fulfillment-orders' ); ?></th>
+			<td>
+				<input type="number" name="bfo_default_length" value="<?php echo esc_attr( $length ); ?>" class="small-text" min="0" step="0.1">
+				&times;
+				<input type="number" name="bfo_default_width"  value="<?php echo esc_attr( $width ); ?>"  class="small-text" min="0" step="0.1">
+				&times;
+				<input type="number" name="bfo_default_height" value="<?php echo esc_attr( $height ); ?>" class="small-text" min="0" step="0.1">
+				<select name="bfo_default_dist_unit">
+					<option value="in" <?php selected( $dist_unit, 'in' ); ?>><?php esc_html_e( 'in', 'barcode-fulfillment-orders' ); ?></option>
+					<option value="cm" <?php selected( $dist_unit, 'cm' ); ?>><?php esc_html_e( 'cm', 'barcode-fulfillment-orders' ); ?></option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<th scope="row"><label for="bfo_default_weight"><?php esc_html_e( 'Default Weight', 'barcode-fulfillment-orders' ); ?></label></th>
+			<td>
+				<input type="number" name="bfo_default_weight" id="bfo_default_weight"
+				       value="<?php echo esc_attr( $weight ); ?>" class="small-text" min="0" step="0.1">
+				<select name="bfo_default_mass_unit">
+					<option value="oz" <?php selected( $mass_unit, 'oz' ); ?>><?php esc_html_e( 'oz', 'barcode-fulfillment-orders' ); ?></option>
+					<option value="lb" <?php selected( $mass_unit, 'lb' ); ?>><?php esc_html_e( 'lb', 'barcode-fulfillment-orders' ); ?></option>
+					<option value="g"  <?php selected( $mass_unit, 'g' );  ?>><?php esc_html_e( 'g',  'barcode-fulfillment-orders' ); ?></option>
+					<option value="kg" <?php selected( $mass_unit, 'kg' ); ?>><?php esc_html_e( 'kg', 'barcode-fulfillment-orders' ); ?></option>
+				</select>
+				<p class="description"><?php esc_html_e( 'Used for the entire order when no per-box weight is available.', 'barcode-fulfillment-orders' ); ?></p>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * Saves the Shipping settings tab.
+	 *
+	 * @since  1.1.0
+	 * @return void
+	 */
+	private function save_shipping(): void {
+		$providers = array( 'none', 'shippo', 'easypost' );
+		$provider  = isset( $_POST['bfo_shipping_provider'] ) ? sanitize_key( $_POST['bfo_shipping_provider'] ) : 'none';
+		update_option( BFO_OPTION_SHIPPING_PROVIDER, in_array( $provider, $providers, true ) ? $provider : 'none' );
+
+		update_option( BFO_OPTION_SHIPPO_API_KEY,   isset( $_POST['bfo_shippo_api_key'] )   ? sanitize_text_field( wp_unslash( $_POST['bfo_shippo_api_key'] ) )   : '' );
+		update_option( BFO_OPTION_EASYPOST_API_KEY, isset( $_POST['bfo_easypost_api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['bfo_easypost_api_key'] ) ) : '' );
+		update_option( BFO_OPTION_AUTO_SHIP_ON_PACK, isset( $_POST['bfo_auto_ship_on_pack'] ) ? 'yes' : 'no' );
+
+		// From address.
+		$addr_keys = array( 'name', 'company', 'street1', 'street2', 'city', 'state', 'zip', 'country', 'phone', 'email' );
+		foreach ( $addr_keys as $key ) {
+			$opt  = 'bfo_shipping_from_' . $key;
+			$post = 'bfo_shipping_from_' . $key;
+			update_option( constant( 'BFO_OPTION_SHIPPING_FROM_' . strtoupper( $key ) ), isset( $_POST[ $post ] ) ? sanitize_text_field( wp_unslash( $_POST[ $post ] ) ) : '' );
+		}
+
+		// Default parcel.
+		update_option( BFO_OPTION_DEFAULT_LENGTH, isset( $_POST['bfo_default_length'] ) ? (float) $_POST['bfo_default_length'] : 10 );
+		update_option( BFO_OPTION_DEFAULT_WIDTH,  isset( $_POST['bfo_default_width'] )  ? (float) $_POST['bfo_default_width']  :  8 );
+		update_option( BFO_OPTION_DEFAULT_HEIGHT, isset( $_POST['bfo_default_height'] ) ? (float) $_POST['bfo_default_height'] :  4 );
+		update_option( BFO_OPTION_DEFAULT_WEIGHT, isset( $_POST['bfo_default_weight'] ) ? (float) $_POST['bfo_default_weight'] : 16 );
+
+		$dist_units = array( 'in', 'cm' );
+		$dist_unit  = isset( $_POST['bfo_default_dist_unit'] ) ? sanitize_key( $_POST['bfo_default_dist_unit'] ) : 'in';
+		update_option( BFO_OPTION_DEFAULT_DIST_UNIT, in_array( $dist_unit, $dist_units, true ) ? $dist_unit : 'in' );
+
+		$mass_units = array( 'oz', 'lb', 'g', 'kg' );
+		$mass_unit  = isset( $_POST['bfo_default_mass_unit'] ) ? sanitize_key( $_POST['bfo_default_mass_unit'] ) : 'oz';
+		update_option( BFO_OPTION_DEFAULT_MASS_UNIT, in_array( $mass_unit, $mass_units, true ) ? $mass_unit : 'oz' );
 	}
 
 	/**

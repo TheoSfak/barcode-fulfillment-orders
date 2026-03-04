@@ -3,7 +3,7 @@
  * Plugin Name:       Barcode Fulfillment Orders
  * Plugin URI:        https://github.com/TheoSfak/barcode-fulfillment-orders
  * Description:       Barcode-based warehouse fulfillment for WooCommerce. Assign barcodes to products, scan orders to pack, and track every step from queue to shipment.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 6.4
  * Requires PHP:      8.0
  * Author:            Theodore Sfakianakis
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // -------------------------------------------------------------------------
 
 /** Plugin version. */
-define( 'BFO_VERSION', '1.0.0' );
+define( 'BFO_VERSION', '1.1.0' );
 
 /** Database schema version (increment when tables change). */
 define( 'BFO_DB_VERSION', '1.0.0' );
@@ -56,6 +56,24 @@ define( 'BFO_META_ORDER_SESSION_ID', '_bfo_packing_session_id' );
 
 /** Order meta key storing box count. */
 define( 'BFO_META_ORDER_BOX_COUNT', '_bfo_box_count' );
+
+/** Order meta key storing the carrier tracking number. */
+define( 'BFO_META_TRACKING_NUMBER',    '_bfo_tracking_number' );
+
+/** Order meta key storing the carrier name. */
+define( 'BFO_META_TRACKING_CARRIER',   '_bfo_tracking_carrier' );
+
+/** Order meta key storing the carrier tracking URL. */
+define( 'BFO_META_TRACKING_URL',       '_bfo_tracking_url' );
+
+/** Order meta key storing the shipping label download URL. */
+define( 'BFO_META_SHIPPING_LABEL_URL', '_bfo_shipping_label_url' );
+
+/** Order meta key storing the carrier shipment ID (EasyPost). */
+define( 'BFO_META_SHIPMENT_ID',        '_bfo_shipment_id' );
+
+/** Order meta key storing the carrier transaction/label ID (for voiding). */
+define( 'BFO_META_TRANSACTION_ID',     '_bfo_transaction_id' );
 
 // -------------------------------------------------------------------------
 // Option key constants
@@ -115,6 +133,70 @@ define( 'BFO_OPTION_LOG_RETENTION', 'bfo_log_retention' );
 define( 'BFO_OPTION_DB_VERSION', 'bfo_db_version' );
 
 // -------------------------------------------------------------------------
+// Shipping option constants
+// -------------------------------------------------------------------------
+
+/** Option: shipping provider (none / shippo / easypost). */
+define( 'BFO_OPTION_SHIPPING_PROVIDER',    'bfo_shipping_provider' );
+
+/** Option: Shippo API key. */
+define( 'BFO_OPTION_SHIPPO_API_KEY',       'bfo_shippo_api_key' );
+
+/** Option: EasyPost API key. */
+define( 'BFO_OPTION_EASYPOST_API_KEY',     'bfo_easypost_api_key' );
+
+/** Option: auto-purchase cheapest label when order is marked Packed (yes/no). */
+define( 'BFO_OPTION_AUTO_SHIP_ON_PACK',    'bfo_auto_ship_on_pack' );
+
+/** Option: ship-from sender name. */
+define( 'BFO_OPTION_SHIPPING_FROM_NAME',    'bfo_shipping_from_name' );
+
+/** Option: ship-from company name. */
+define( 'BFO_OPTION_SHIPPING_FROM_COMPANY', 'bfo_shipping_from_company' );
+
+/** Option: ship-from street line 1. */
+define( 'BFO_OPTION_SHIPPING_FROM_STREET1', 'bfo_shipping_from_street1' );
+
+/** Option: ship-from street line 2. */
+define( 'BFO_OPTION_SHIPPING_FROM_STREET2', 'bfo_shipping_from_street2' );
+
+/** Option: ship-from city. */
+define( 'BFO_OPTION_SHIPPING_FROM_CITY',    'bfo_shipping_from_city' );
+
+/** Option: ship-from state / province. */
+define( 'BFO_OPTION_SHIPPING_FROM_STATE',   'bfo_shipping_from_state' );
+
+/** Option: ship-from ZIP / postal code. */
+define( 'BFO_OPTION_SHIPPING_FROM_ZIP',     'bfo_shipping_from_zip' );
+
+/** Option: ship-from ISO 3166-1 alpha-2 country code. */
+define( 'BFO_OPTION_SHIPPING_FROM_COUNTRY', 'bfo_shipping_from_country' );
+
+/** Option: ship-from phone number. */
+define( 'BFO_OPTION_SHIPPING_FROM_PHONE',   'bfo_shipping_from_phone' );
+
+/** Option: ship-from e-mail address. */
+define( 'BFO_OPTION_SHIPPING_FROM_EMAIL',   'bfo_shipping_from_email' );
+
+/** Option: default parcel length. */
+define( 'BFO_OPTION_DEFAULT_LENGTH',    'bfo_default_length' );
+
+/** Option: default parcel width. */
+define( 'BFO_OPTION_DEFAULT_WIDTH',     'bfo_default_width' );
+
+/** Option: default parcel height. */
+define( 'BFO_OPTION_DEFAULT_HEIGHT',    'bfo_default_height' );
+
+/** Option: default parcel weight. */
+define( 'BFO_OPTION_DEFAULT_WEIGHT',    'bfo_default_weight' );
+
+/** Option: default distance unit (in / cm). */
+define( 'BFO_OPTION_DEFAULT_DIST_UNIT', 'bfo_default_dist_unit' );
+
+/** Option: default mass unit (oz / g / lb / kg). */
+define( 'BFO_OPTION_DEFAULT_MASS_UNIT', 'bfo_default_mass_unit' );
+
+// -------------------------------------------------------------------------
 // Capability constants
 // -------------------------------------------------------------------------
 
@@ -139,6 +221,9 @@ define( 'BFO_STATUS_PACKING', 'bfo-packing' );
 
 /** Order status slug: packed and ready to ship. */
 define( 'BFO_STATUS_PACKED', 'bfo-packed' );
+
+/** Order status slug: shipped with carrier tracking. */
+define( 'BFO_STATUS_SHIPPED', 'bfo-shipped' );
 
 // -------------------------------------------------------------------------
 // Packing session status constants
@@ -267,6 +352,9 @@ function bfo_init() {
 	require_once BFO_PLUGIN_DIR . 'includes/class-bfo-dashboard.php';
 	require_once BFO_PLUGIN_DIR . 'includes/class-bfo-labels.php';
 
+	// Shipping integration.
+	require_once BFO_PLUGIN_DIR . 'includes/class-bfo-shipping.php';
+
 	// Emails.
 	require_once BFO_PLUGIN_DIR . 'includes/class-bfo-emails.php';
 
@@ -286,6 +374,7 @@ function bfo_init() {
 	BFO_Dashboard::instance();
 	BFO_Labels::instance();
 	BFO_Emails::instance();
+	BFO_Shipping::instance();
 }
 add_action( 'plugins_loaded', 'bfo_init', 20 );
 
@@ -367,8 +456,15 @@ function bfo_activate() {
 		BFO_OPTION_QUEUE_REFRESH          => 30,
 		BFO_OPTION_EMAIL_PACKED           => 'yes',
 		BFO_OPTION_EMAIL_MISSING          => 'yes',
-		BFO_OPTION_LOG_RETENTION          => 90,
-	);
+		BFO_OPTION_LOG_RETENTION          => 90,			// Shipping defaults.
+			BFO_OPTION_SHIPPING_PROVIDER      => 'none',
+			BFO_OPTION_AUTO_SHIP_ON_PACK      => 'no',
+			BFO_OPTION_DEFAULT_LENGTH         => 10,
+			BFO_OPTION_DEFAULT_WIDTH          =>  8,
+			BFO_OPTION_DEFAULT_HEIGHT         =>  4,
+			BFO_OPTION_DEFAULT_WEIGHT         => 16,
+			BFO_OPTION_DEFAULT_DIST_UNIT      => 'in',
+			BFO_OPTION_DEFAULT_MASS_UNIT      => 'oz',	);
 
 	foreach ( $defaults as $key => $value ) {
 		if ( false === get_option( $key ) ) {

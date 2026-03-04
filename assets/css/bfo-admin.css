@@ -211,3 +211,113 @@
 	.bfo-dashboard-columns { flex-direction: column; }
 	.bfo-bar-chart { height: 100px; }
 }
+
+/* ---------------------------------------------------------------------------
+   Shipping — Rate-picker Modal
+   --------------------------------------------------------------------------- */
+.bfo-modal-overlay {
+	position: fixed;
+	инset: 0;
+	top: 0; right: 0; bottom: 0; left: 0;
+	background: rgba(0,0,0,.55);
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.bfo-modal {
+	background: #fff;
+	border-radius: 8px;
+	box-shadow: 0 8px 40px rgba(0,0,0,.3);
+	width: 540px;
+	max-width: 94vw;
+	max-height: 88vh;
+	display: flex;
+	flex-direction: column;
+	padding: 24px;
+	position: relative;
+}
+
+.bfo-modal-title {
+	margin: 0 0 16px;
+	font-size: 1.2rem;
+	padding-right: 28px;
+}
+
+.bfo-modal-close {
+	position: absolute;
+	top: 14px;
+	right: 14px;
+	background: none;
+	border: none;
+	font-size: 1.4rem;
+	line-height: 1;
+	cursor: pointer;
+	color: #555;
+	padding: 2px 6px;
+}
+.bfo-modal-close:hover { color: #000; }
+
+.bfo-rates-list {
+	overflow-y: auto;
+	max-height: 340px;
+	margin-bottom: 16px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+.bfo-rate-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 14px;
+	cursor: pointer;
+	border-bottom: 1px solid #eee;
+}
+.bfo-rate-row:last-child { border-bottom: none; }
+.bfo-rate-row:hover { background: #f9f9f9; }
+.bfo-rate-row input[type="radio"] { flex-shrink: 0; }
+
+.bfo-rate-badge {
+	display: inline-block;
+	font-size: .72rem;
+	font-weight: 700;
+	textransform: uppercase;
+	background: #1565c0;
+	color: #fff;
+	border-radius: 3px;
+	padding: 2px 6px;
+	white-space: nowrap;
+}
+
+.bfo-rate-service { flex: 1; font-size: .9rem; }
+
+.bfo-rate-days {
+	font-size: .8rem;
+	color: #666;
+	white-space: nowrap;
+}
+
+.bfo-rate-price {
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+.bfo-modal-empty {
+	padding: 16px;
+	color: #666;
+	text-align: center;
+}
+
+.bfo-modal-footer {
+	border-top: 1px solid #eee;
+	padding-top: 14px;
+	text-align: right;
+}
+
+/* Shipped status badge colour */
+.order-status.status-bfo-shipped {
+	background: #1565c0;
+	color: #fff;
+}

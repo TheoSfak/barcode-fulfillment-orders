@@ -191,7 +191,7 @@
 	function applySummary( summary ) {
 		summary.forEach( function ( item ) {
 			state.items[ item.product_id ] = {
-				needed:  item.needed,
+				needed:  item.needed !== undefined ? item.needed : item.ordered,
 				scanned: item.scanned,
 				status:  item.status,
 			};

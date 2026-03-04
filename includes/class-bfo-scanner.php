@@ -366,6 +366,7 @@ class BFO_Scanner {
 				'sku'          => $product ? $product->get_sku() : '',
 				'barcode'      => $product ? (string) $product->get_meta( BFO_META_PRODUCT_BARCODE, true ) : '',
 				'ordered'      => $qty,
+				'needed'       => $qty,
 				'scanned'      => $scanned,
 				'missing'      => $missing,
 				'status'       => $status,

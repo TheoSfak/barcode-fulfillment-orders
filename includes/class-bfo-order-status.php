@@ -102,6 +102,23 @@ class BFO_Order_Status {
 				'label_count'               => _n_noop( 'Packed <span class="count">(%s)</span>', 'Packed <span class="count">(%s)</span>', 'barcode-fulfillment-orders' ),
 			)
 		);
+
+		register_post_status(
+			'wc-' . BFO_STATUS_SHIPPED,
+			array(
+				'label'                     => _x( 'Shipped', 'Order status', 'barcode-fulfillment-orders' ),
+				'public'                    => true,
+				'exclude_from_search'       => false,
+				'show_in_admin_all_list'    => true,
+				'show_in_admin_status_list' => true,
+				/* translators: %s: number of orders */
+				'label_count'               => _n_noop( 'Shipped <span class="count">(%s)</span>', 'Shipped <span class="count">(%s)</span>', 'barcode-fulfillment-orders' ),
+			)
+		);
+				/* translators: %s: number of orders */
+				'label_count'               => _n_noop( 'Packed <span class="count">(%s)</span>', 'Packed <span class="count">(%s)</span>', 'barcode-fulfillment-orders' ),
+			)
+		);
 	}
 
 	/**
@@ -118,7 +135,8 @@ class BFO_Order_Status {
 			// Insert after 'processing'.
 			if ( 'wc-processing' === $key ) {
 				$new[ 'wc-' . BFO_STATUS_PACKING ] = _x( 'Packing', 'Order status', 'barcode-fulfillment-orders' );
-				$new[ 'wc-' . BFO_STATUS_PACKED ]  = _x( 'Packed', 'Order status', 'barcode-fulfillment-orders' );
+				$new[ 'wc-' . BFO_STATUS_PACKED ]  = _x( 'Packed',  'Order status', 'barcode-fulfillment-orders' );
+				$new[ 'wc-' . BFO_STATUS_SHIPPED ] = _x( 'Shipped', 'Order status', 'barcode-fulfillment-orders' );
 			}
 		}
 		return $new;
@@ -145,7 +163,8 @@ class BFO_Order_Status {
 	 * @return array
 	 */
 	public function add_bulk_actions( $actions ) {
-		$actions[ 'mark_' . BFO_STATUS_PACKED ] = __( 'Change status to Packed', 'barcode-fulfillment-orders' );
+		$actions[ 'mark_' . BFO_STATUS_PACKED ]   = __( 'Change status to Packed',  'barcode-fulfillment-orders' );
+		$actions[ 'mark_' . BFO_STATUS_SHIPPED ]  = __( 'Change status to Shipped', 'barcode-fulfillment-orders' );
 		return $actions;
 	}
 
@@ -168,6 +187,10 @@ class BFO_Order_Status {
 		}
 		.order-status.status-<?php echo esc_attr( BFO_STATUS_PACKED ); ?> {
 			background: #2e7d32;
+			color: #fff;
+		}
+		.order-status.status-<?php echo esc_attr( BFO_STATUS_SHIPPED ); ?> {
+			background: #1565c0;
 			color: #fff;
 		}
 		</style>
@@ -203,7 +226,8 @@ class BFO_Order_Status {
 	public static function customer_label( $status ) {
 		$map = array(
 			BFO_STATUS_PACKING => __( 'Your order is being prepared', 'barcode-fulfillment-orders' ),
-			BFO_STATUS_PACKED  => __( 'Your order is ready to ship', 'barcode-fulfillment-orders' ),
+			BFO_STATUS_PACKED  => __( 'Your order is ready to ship',  'barcode-fulfillment-orders' ),
+			BFO_STATUS_SHIPPED => __( 'Your order has been shipped',   'barcode-fulfillment-orders' ),
 		);
 		return isset( $map[ $status ] ) ? $map[ $status ] : wc_get_order_status_name( $status );
 	}

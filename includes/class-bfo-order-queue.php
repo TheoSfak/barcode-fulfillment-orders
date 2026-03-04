@@ -175,6 +175,7 @@ class BFO_Order_Queue {
 				<th><?php esc_html_e( 'Date', 'barcode-fulfillment-orders' ); ?></th>
 				<th><?php esc_html_e( 'Status', 'barcode-fulfillment-orders' ); ?></th>
 				<th><?php esc_html_e( 'Shipping', 'barcode-fulfillment-orders' ); ?></th>
+				<th><?php esc_html_e( 'Label', 'barcode-fulfillment-orders' ); ?></th>
 				<th><?php esc_html_e( 'Actions', 'barcode-fulfillment-orders' ); ?></th>
 			</tr>
 			</thead>
@@ -190,6 +191,10 @@ class BFO_Order_Queue {
 					$shipping = $s_item->get_method_title();
 					break;
 				}
+				$tracking_num = $order->get_meta( BFO_META_TRACKING_NUMBER, true );
+				$tracking_url = $order->get_meta( BFO_META_TRACKING_URL,    true );
+				$provider     = get_option( BFO_OPTION_SHIPPING_PROVIDER, 'none' );
+				$is_packed    = $order->has_status( BFO_STATUS_PACKED );
 			?>
 			<tr data-order-id="<?php echo absint( $order->get_id() ); ?>" class="<?php echo $is_active ? 'bfo-row-active' : ''; ?>">
 				<td>
@@ -231,6 +236,27 @@ class BFO_Order_Queue {
 				</td>
 				<td><?php echo esc_html( $shipping ?: '—' ); ?></td>
 				<td>
+					<?php if ( $tracking_num ) : ?>
+						<?php if ( $tracking_url ) : ?>
+							<a href="<?php echo esc_url( $tracking_url ); ?>" target="_blank" rel="noopener">
+								<?php echo esc_html( $tracking_num ); ?> ↗
+							</a>
+						<?php else : ?>
+							<code><?php echo esc_html( $tracking_num ); ?></code>
+						<?php endif; ?>
+					<?php elseif ( $is_packed && 'none' !== $provider ) : ?>
+						<?php $ship_nonce = wp_create_nonce( 'bfo_shipping_' . $order->get_id() ); ?>
+						<button type="button"
+							class="button button-small bfo-get-rates-btn"
+							data-order-id="<?php echo absint( $order->get_id() ); ?>"
+							data-nonce="<?php echo esc_attr( $ship_nonce ); ?>">
+							<?php esc_html_e( 'Get Rates', 'barcode-fulfillment-orders' ); ?>
+						</button>
+					<?php else : ?>
+						<span class="description">—</span>
+					<?php endif; ?>
+				</td>
+				<td>
 					<?php if ( $is_active ) : ?>
 						<span class="description"><?php esc_html_e( 'In progress', 'barcode-fulfillment-orders' ); ?></span>
 					<?php else : ?>
@@ -266,7 +292,11 @@ class BFO_Order_Queue {
 		return wc_get_orders(
 			array(
 				'limit'   => BFO_MAX_QUEUE_ORDERS,
-				'status'  => array( 'processing', 'wc-' . BFO_STATUS_PACKING ),
+				'status'  => array(
+					'processing',
+					'wc-' . BFO_STATUS_PACKING,
+					'wc-' . BFO_STATUS_PACKED,
+				),
 				'orderby' => 'date',
 				'order'   => 'ASC',
 			)

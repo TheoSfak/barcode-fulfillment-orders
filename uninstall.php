@@ -31,6 +31,12 @@ $wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_bfo_barcode' ) );        
 $wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_bfo_order_barcode' ) );     // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 $wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_bfo_packing_session_id' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 $wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_bfo_box_count' ) );         // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_bfo_tracking_number' ) );   // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_bfo_tracking_carrier' ) );  // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_bfo_tracking_url' ) );      // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_bfo_shipping_label_url' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_bfo_shipment_id' ) );       // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => '_bfo_transaction_id' ) );    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 
 // -------------------------------------------------------------------------
 // Remove HPOS order meta (if HPOS active)
@@ -40,6 +46,12 @@ if ( $wpdb->get_var( "SHOW TABLES LIKE '{$wpdb->prefix}wc_orders_meta'" ) ) { //
 	$wpdb->delete( "{$wpdb->prefix}wc_orders_meta", array( 'meta_key' => '_bfo_order_barcode' ) );      // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	$wpdb->delete( "{$wpdb->prefix}wc_orders_meta", array( 'meta_key' => '_bfo_packing_session_id' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	$wpdb->delete( "{$wpdb->prefix}wc_orders_meta", array( 'meta_key' => '_bfo_box_count' ) );          // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$wpdb->delete( "{$wpdb->prefix}wc_orders_meta", array( 'meta_key' => '_bfo_tracking_number' ) );    // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$wpdb->delete( "{$wpdb->prefix}wc_orders_meta", array( 'meta_key' => '_bfo_tracking_carrier' ) );   // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$wpdb->delete( "{$wpdb->prefix}wc_orders_meta", array( 'meta_key' => '_bfo_tracking_url' ) );       // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$wpdb->delete( "{$wpdb->prefix}wc_orders_meta", array( 'meta_key' => '_bfo_shipping_label_url' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$wpdb->delete( "{$wpdb->prefix}wc_orders_meta", array( 'meta_key' => '_bfo_shipment_id' ) );        // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$wpdb->delete( "{$wpdb->prefix}wc_orders_meta", array( 'meta_key' => '_bfo_transaction_id' ) );     // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 }
 
 // -------------------------------------------------------------------------
@@ -61,6 +73,27 @@ $options = array(
 	'bfo_email_missing',
 	'bfo_log_retention',
 	'bfo_db_version',
+	// Shipping options.
+	'bfo_shipping_provider',
+	'bfo_shippo_api_key',
+	'bfo_easypost_api_key',
+	'bfo_auto_ship_on_pack',
+	'bfo_shipping_from_name',
+	'bfo_shipping_from_company',
+	'bfo_shipping_from_street1',
+	'bfo_shipping_from_street2',
+	'bfo_shipping_from_city',
+	'bfo_shipping_from_state',
+	'bfo_shipping_from_zip',
+	'bfo_shipping_from_country',
+	'bfo_shipping_from_phone',
+	'bfo_shipping_from_email',
+	'bfo_default_length',
+	'bfo_default_width',
+	'bfo_default_height',
+	'bfo_default_weight',
+	'bfo_default_dist_unit',
+	'bfo_default_mass_unit',
 );
 
 foreach ( $options as $option ) {

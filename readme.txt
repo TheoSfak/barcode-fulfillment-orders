@@ -4,7 +4,7 @@ Tags: woocommerce, barcode, fulfillment, warehouse, packing, scanner
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -71,6 +71,14 @@ Yes. Go to **Fulfillment → Settings → General** and change the Barcode Forma
 6. Product barcode field with inline SVG preview.
 
 == Changelog ==
+
+= 1.1.0 =
+* New: Shipping integration — connect Shippo or EasyPost to fetch live carrier rates and purchase labels from the order edit screen and the packing queue.
+* New: Rate-picker modal with automatic cheapest-rate pre-selection.
+* New: Tracking number, carrier, and label URL stored on every order; customer email updated on shipment.
+* New: Optional auto-ship on Pack — instantly purchases the cheapest rate when an order is marked Packed.
+* New: "bfo-shipped" order status with blue badge and bulk-action support.
+* New: Shipping settings tab (provider, API key, from-address, default parcel dimensions).
 
 = 1.0.0 =
 * Initial release.

@@ -100,6 +100,14 @@ class BFO_Packing_Session {
 			return array( 'success' => false, 'message' => __( 'Order not found.', 'barcode-fulfillment-orders' ) );
 		}
 
+		// Refuse to create a new session for an already-packed (or shipped) order.
+		if ( $order->has_status( array( BFO_STATUS_PACKED, BFO_STATUS_SHIPPED ) ) ) {
+			return array(
+				'success' => false,
+				'message' => __( 'This order has already been packed.', 'barcode-fulfillment-orders' ),
+			);
+		}
+
 		// Check for an existing active/paused lock on this order.
 		$existing = BFO_Database::get_instance()->get_active_session_for_order( $order_id );
 		if ( $existing ) {

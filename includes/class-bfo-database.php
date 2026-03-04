@@ -226,6 +226,28 @@ class BFO_Database {
 	}
 
 	/**
+	 * Returns the most recent completed session for an order, or null if none.
+	 *
+	 * @since  1.1.0
+	 * @param  int $order_id  WooCommerce order ID.
+	 * @return object|null
+	 */
+	public function get_completed_session_for_order( $order_id ) {
+		global $wpdb;
+
+		return $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->prepare(
+				"SELECT * FROM `{$wpdb->prefix}bfo_packing_sessions`
+				  WHERE `order_id` = %d
+				    AND `status` = 'completed'
+				  ORDER BY `id` DESC
+				  LIMIT 1",
+				absint( $order_id )
+			)
+		);
+	}
+
+	/**
 	 * Updates a session row.
 	 *
 	 * @since  1.0.0

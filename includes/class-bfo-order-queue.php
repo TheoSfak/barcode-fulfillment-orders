@@ -320,7 +320,7 @@ class BFO_Order_Queue {
 	 * @return WC_Order[]
 	 */
 	public function get_queue_orders() {
-		return wc_get_orders(
+		$orders = wc_get_orders(
 			array(
 				'limit'   => BFO_MAX_QUEUE_ORDERS,
 				'status'  => array(
@@ -332,6 +332,37 @@ class BFO_Order_Queue {
 				'order'   => 'ASC',
 			)
 		);
+
+		// Auto-repair: orders stuck in "Packing" with no active/paused session
+		// (caused by a session completing and the status not saved, or a new session
+		// started on an already-packed order before the guard was added).
+		foreach ( $orders as $order ) {
+			if ( ! $order->has_status( BFO_STATUS_PACKING ) ) {
+				continue;
+			}
+			$active = BFO_Database::get_instance()->get_active_session_for_order( $order->get_id() );
+			if ( $active ) {
+				continue; // Legitimately in progress — leave it alone.
+			}
+			// No active/paused session but status is still Packing.
+			// Check whether a completed session exists.
+			$completed = BFO_Database::get_instance()->get_completed_session_for_order( $order->get_id() );
+			if ( $completed ) {
+				// Repair: move status forward to Packed.
+				$order->update_status(
+					BFO_STATUS_PACKED,
+					__( 'Status repaired: packing session was completed.', 'barcode-fulfillment-orders' )
+				);
+			} else {
+				// No session at all — order was never properly started; revert to processing.
+				$order->update_status(
+					'processing',
+					__( 'Status repaired: packing session missing, reverted to processing.', 'barcode-fulfillment-orders' )
+				);
+			}
+		}
+
+		return $orders;
 	}
 
 	// -------------------------------------------------------------------------

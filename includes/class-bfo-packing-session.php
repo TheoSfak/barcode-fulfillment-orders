@@ -100,9 +100,35 @@ class BFO_Packing_Session {
 			return array( 'success' => false, 'message' => __( 'Order not found.', 'barcode-fulfillment-orders' ) );
 		}
 
-		// Check for an existing active lock on this order.
+		// Check for an existing active/paused lock on this order.
 		$existing = BFO_Database::get_instance()->get_active_session_for_order( $order_id );
-		if ( $existing && BFO_SESSION_ACTIVE === $existing->status ) {
+		if ( $existing ) {
+			// Same worker returning to their own session — resume it.
+			if ( (int) $existing->worker_id === $worker_id ) {
+				BFO_Database::get_instance()->update_session(
+					(int) $existing->id,
+					array(
+						'status'    => BFO_SESSION_ACTIVE,
+						'last_ping' => current_time( 'mysql' ),
+					)
+				);
+				return array( 'success' => true, 'session_id' => (int) $existing->id, 'message' => '' );
+			}
+
+			// Paused session — any worker can pick it up.
+			if ( BFO_SESSION_PAUSED === $existing->status ) {
+				BFO_Database::get_instance()->update_session(
+					(int) $existing->id,
+					array(
+						'status'    => BFO_SESSION_ACTIVE,
+						'worker_id' => $worker_id,
+						'last_ping' => current_time( 'mysql' ),
+					)
+				);
+				return array( 'success' => true, 'session_id' => (int) $existing->id, 'message' => '' );
+			}
+
+			// Active session owned by a different worker — block.
 			$worker = get_userdata( (int) $existing->worker_id );
 			return array(
 				'success' => false,

@@ -184,6 +184,8 @@ class BFO_Order_Queue {
 				$barcode    = bfo_get_order_barcode( $order->get_id() );
 				$session    = bfo_get_session_for_order( $order->get_id() );
 				$is_active  = $session && BFO_SESSION_ACTIVE === $session->status;
+				$is_paused  = $session && BFO_SESSION_PAUSED === $session->status;
+				$is_mine    = $session && (int) $session->worker_id === get_current_user_id();
 				$worker     = $is_active ? get_userdata( (int) $session->worker_id ) : null;
 				$item_count = $order->get_item_count();
 				$shipping   = '';
@@ -231,8 +233,8 @@ class BFO_Order_Queue {
 							/* translators: %s: worker name */
 							echo esc_html( sprintf( __( 'Packing: %s', 'barcode-fulfillment-orders' ), $worker->display_name ) );
 							?>
-						</small>
-					<?php endif; ?>
+						</small>				<?php elseif ( $is_paused ) : ?>
+					<br><small class="description"><?php esc_html_e( 'Paused', 'barcode-fulfillment-orders' ); ?></small>					<?php endif; ?>
 				</td>
 				<td><?php echo esc_html( $shipping ?: '—' ); ?></td>
 				<td>
@@ -257,8 +259,25 @@ class BFO_Order_Queue {
 					<?php endif; ?>
 				</td>
 				<td>
-					<?php if ( $is_active ) : ?>
+					<?php if ( $is_active && $is_mine ) : ?>
+						<?php
+						$continue_url = esc_url( bfo_fulfillment_url( $order->get_id() ) . '&session_id=' . absint( $session->id ) );
+						?>
+						<a href="<?php echo $continue_url; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>" class="button button-primary">
+							<?php esc_html_e( 'Continue Packing', 'barcode-fulfillment-orders' ); ?>
+						</a>
+					<?php elseif ( $is_active && ! $is_mine ) : ?>
 						<span class="description"><?php esc_html_e( 'In progress', 'barcode-fulfillment-orders' ); ?></span>
+					<?php elseif ( $is_paused ) : ?>
+						<?php
+						$nonce = wp_create_nonce( 'bfo_start_session_' . $order->get_id() );
+						?>
+						<button type="button"
+							class="button button-primary bfo-start-packing"
+							data-order-id="<?php echo absint( $order->get_id() ); ?>"
+							data-nonce="<?php echo esc_attr( $nonce ); ?>">
+							<?php esc_html_e( 'Resume Packing', 'barcode-fulfillment-orders' ); ?>
+						</button>
 					<?php else : ?>
 						<?php
 						$nonce = wp_create_nonce( 'bfo_start_session_' . $order->get_id() );

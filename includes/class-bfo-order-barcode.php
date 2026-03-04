@@ -197,13 +197,21 @@ class BFO_Order_Barcode {
 		echo '<p style="text-align:center;"><code>' . esc_html( $barcode ) . '</code></p>';
 		echo BFO_Barcode_Generator::get_instance()->render_inline( $barcode, $format, 50, 2 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG generated internally
 
-		// Pack Order link.
+		// Pack Order link / status indicator.
 		$session = bfo_get_session_for_order( $order->get_id() );
 		if ( $session && BFO_SESSION_ACTIVE === $session->status ) {
 			$worker = get_userdata( (int) $session->worker_id );
 			echo '<p class="description">' .
 				/* translators: %s: worker display name */
 				esc_html( sprintf( __( 'Being packed by: %s', 'barcode-fulfillment-orders' ), $worker ? $worker->display_name : __( 'Unknown', 'barcode-fulfillment-orders' ) ) ) .
+				'</p>';
+		} elseif ( $order->has_status( BFO_STATUS_PACKED ) ) {
+			echo '<p style="text-align:center;color:#2e7d32;font-weight:600;">&#10003; ' .
+				esc_html__( 'Order Packed', 'barcode-fulfillment-orders' ) .
+				'</p>';
+		} elseif ( $order->has_status( BFO_STATUS_SHIPPED ) ) {
+			echo '<p style="text-align:center;color:#1565c0;font-weight:600;">&#10003; ' .
+				esc_html__( 'Order Shipped', 'barcode-fulfillment-orders' ) .
 				'</p>';
 		} else {
 			printf(
